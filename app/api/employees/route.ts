@@ -4,6 +4,8 @@ import "@/lib/db-ponto";
 import "@/lib/db-auth";
 import "@/lib/db-salario";
 
+export const dynamic = "force-dynamic";
+
 export interface Funcionario {
   id: number;
   nome: string;

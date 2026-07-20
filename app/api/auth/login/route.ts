@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-auth";
 
+export const dynamic = "force-dynamic";
+
 interface FuncionarioComPin {
   id: number;
   nome: string;

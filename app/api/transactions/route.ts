@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import "@/lib/db-custos";
 import { TransacaoComSetor } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const setorId = searchParams.get("setor_id");

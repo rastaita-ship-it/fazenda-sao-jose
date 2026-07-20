@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { Setor } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const setores = db
     .prepare("SELECT * FROM setores WHERE ativo = 1 ORDER BY id ASC")

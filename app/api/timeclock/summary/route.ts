@@ -4,6 +4,8 @@ import "@/lib/db-ponto";
 import "@/lib/db-ponto-geo";
 import { JORNADA_PADRAO_HORAS } from "@/lib/jornada";
 
+export const dynamic = "force-dynamic";
+
 interface RegistroBruto {
   id: number;
   funcionario_id: number;

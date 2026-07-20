@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-estoque";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const itens = db
     .prepare(

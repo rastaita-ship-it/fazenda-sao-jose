@@ -36,9 +36,7 @@ function createConnection(): Database.Database {
 
 export const db = global.__fazendaDb ?? createConnection();
 
-if (process.env.NODE_ENV !== "production") {
-  global.__fazendaDb = db;
-}
+global.__fazendaDb = db;
 
 /**
  * Schema
@@ -97,7 +95,7 @@ function runMigrations(db: Database.Database) {
   const count = db.prepare("SELECT COUNT(*) AS c FROM setores").get() as { c: number };
   if (count.c === 0) {
     const insert = db.prepare(
-      "INSERT INTO setores (nome, tipo, cor) VALUES (?, ?, ?)"
+      "INSERT INTO setores (nome, tipo, cor) VALUES (?, ?, ?) ON CONFLICT(nome) DO NOTHING"
     );
     const seed = db.transaction(() => {
       insert.run("Café", "cafe", "#6f4a25");
