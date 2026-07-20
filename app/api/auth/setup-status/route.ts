@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import "@/lib/db-ponto";
 import "@/lib/db-auth";
 
 export async function GET() {

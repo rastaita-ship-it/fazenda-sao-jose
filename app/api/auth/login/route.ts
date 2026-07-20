@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import "@/lib/db-ponto";
 import "@/lib/db-auth";
 
 interface FuncionarioComPin {
