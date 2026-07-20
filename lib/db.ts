@@ -36,9 +36,7 @@ function createConnection(): Database.Database {
 
 export const db = global.__fazendaDb ?? createConnection();
 
-if (process.env.NODE_ENV !== "production") {
-  global.__fazendaDb = db;
-}
+global.__fazendaDb = db;
 
 /**
  * Schema
