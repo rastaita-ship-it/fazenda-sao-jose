@@ -4,6 +4,8 @@ import "@/lib/db-custos";
 import "@/lib/db-salario";
 import "@/lib/db-patrimonio";
 
+export const dynamic = "force-dynamic";
+
 function diasNoPeriodo(from: string, to: string) {
   const inicio = new Date(from + "T12:00:00");
   const fim = new Date(to + "T12:00:00");

@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import "@/lib/db-manejo";
 import "@/lib/db-manejo-grupo";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const ano = searchParams.get("ano");

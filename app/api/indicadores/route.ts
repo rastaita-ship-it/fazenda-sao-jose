@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import "@/lib/db-area";
 import "@/lib/db-estoque";
 
+export const dynamic = "force-dynamic";
+
 interface SetorRow {
   id: number;
   nome: string;

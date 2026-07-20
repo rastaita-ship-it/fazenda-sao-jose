@@ -4,6 +4,8 @@ import "@/lib/db-ponto";
 import "@/lib/db-ponto-geo";
 import { estaDentroDaFazenda, calcularDistanciaMetros, FAZENDA_COORDENADAS } from "@/lib/geo";
 
+export const dynamic = "force-dynamic";
+
 export interface RegistroPonto {
   id: number;
   funcionario_id: number;

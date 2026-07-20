@@ -4,6 +4,8 @@ import "@/lib/db-patrimonio-arquivos";
 import fs from "fs";
 import path from "path";
 
+export const dynamic = "force-dynamic";
+
 const PASTA_UPLOADS = path.join(process.cwd(), "public", "uploads", "patrimonio");
 
 function extensaoPermitida(nome: string, tipoCampo: string) {

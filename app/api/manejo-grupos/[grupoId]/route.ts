@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import "@/lib/db-manejo";
 import "@/lib/db-manejo-grupo";
 
+export const dynamic = "force-dynamic";
+
 interface ManejoRow {
   id: number;
   setor_id: number;

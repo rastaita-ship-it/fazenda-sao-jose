@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { ResumoFinanceiro } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 /**
  * GET /api/summary?from=YYYY-MM-DD&to=YYYY-MM-DD
  * Defaults to the current month if no range is given.

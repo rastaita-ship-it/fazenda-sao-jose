@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-manejo";
 
+export const dynamic = "force-dynamic";
+
 /**
  * GET /api/activity-templates?setor_tipo=cafe
  * Lista as atividades padrao de um tipo de setor (para os botoes de escolha rapida).
