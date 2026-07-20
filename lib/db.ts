@@ -91,17 +91,15 @@ function runMigrations(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_lanc_op_setor ON lancamentos_operacionais(setor_id);
   `);
 
-  // Seed the four core sectors if the table is empty
-  const count = db.prepare("SELECT COUNT(*) AS c FROM setores").get() as { c: number };
-  if (count.c === 0) {
-    const insert = db.prepare(
-      "INSERT INTO setores (nome, tipo, cor) VALUES (?, ?, ?)"
-    );
-    const seed = db.transaction(() => {
-      insert.run("Café", "cafe", "#6f4a25");
-      insert.run("Gado", "gado", "#3f8f34");
-      insert.run("Ovelhas", "ovelhas", "#8cc97f");
-    });
-    seed();
-  }
+  // Seed the four core sectors, ignoring safely if they already exist
+  // (INSERT OR IGNORE avoids race conditions between parallel build workers)
+  const insert = db.prepare(
+    "INSERT OR IGNORE INTO setores (nome, tipo, cor) VALUES (?, ?, ?)"
+  );
+  const seed = db.transaction(() => {
+    insert.run("Cafe", "cafe", "#6f4a25");
+    insert.run("Gado", "gado", "#3f8f34");
+    insert.run("Ovelhas", "ovelhas", "#8cc97f");
+  });
+  seed();
 }

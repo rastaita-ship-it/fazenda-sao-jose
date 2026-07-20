@@ -25,14 +25,11 @@ if (!nomesManejos.includes("patrimonio_id")) {
   db.exec("ALTER TABLE manejos ADD COLUMN patrimonio_id INTEGER REFERENCES patrimonio(id) ON DELETE SET NULL");
 }
 
-const setorOficina = db.prepare("SELECT id FROM setores WHERE nome = 'Oficina e Manutencao'").get();
-if (!setorOficina) {
-  db.prepare("INSERT INTO setores (nome, tipo, cor) VALUES (?, ?, ?)").run(
-    "Oficina e Manutencao",
-    "outra_cultura",
-    "#6b7280"
-  );
-}
+db.prepare("INSERT OR IGNORE INTO setores (nome, tipo, cor) VALUES (?, ?, ?)").run(
+  "Oficina e Manutencao",
+  "outra_cultura",
+  "#6b7280"
+);
 
 const countAtividades = db
   .prepare("SELECT COUNT(*) AS c FROM atividades_padrao WHERE setor_tipo = 'outra_cultura' AND nome LIKE '%leo%'")
