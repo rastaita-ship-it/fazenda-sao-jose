@@ -30,6 +30,7 @@ function createConnection(): Database.Database {
   const db = new Database(DB_PATH);
   db.pragma("journal_mode = WAL"); // better concurrent read/write behavior
   db.pragma("foreign_keys = ON");
+  db.pragma("busy_timeout = 10000"); // wait up to 10s if db is locked by another connection
   runMigrations(db);
   return db;
 }
