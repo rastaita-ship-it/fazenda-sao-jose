@@ -16,6 +16,7 @@ const ITENS_TODOS = [
   { href: "/balanco", label: "Balanco", icon: "\u{2696}\u{FE0F}", admin: true },
   { href: "/indicadores", label: "Indicadores", icon: "\u{1F4C8}", admin: true },
   { href: "/relatorios", label: "Relatorios", icon: "\u{1F4CA}", admin: true },
+  { href: "/configuracoes", label: "Config", icon: "\u{2699}\u{FE0F}", admin: false },
 ];
 
 export default function BottomNav() {

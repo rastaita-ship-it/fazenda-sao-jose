@@ -12,6 +12,7 @@ const PAGINAS_ADMIN = [
   "/estoque-insumos",
   "/estoque-producao",
   "/setores",
+  "/funcionarios",
 ];
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
