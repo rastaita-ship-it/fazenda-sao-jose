@@ -2,23 +2,28 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/components/auth/AuthContext";
 
-const ITENS = [
-  { href: "/", label: "Resumo", icon: "\u{1F3E0}" },
-  { href: "/setores", label: "Setores", icon: "\u{1F33E}" },
-  { href: "/fluxo-caixa", label: "Fluxo", icon: "\u{1F4B0}" },
-  { href: "/ponto", label: "Ponto", icon: "\u{1F550}" },
-  { href: "/manejo", label: "Manejo", icon: "\u{1F4C5}" },
-  { href: "/patrimonio", label: "Patrimonio", icon: "\u{1F69C}" },
-  { href: "/estoque-insumos", label: "Insumos", icon: "\u{1F6E2}\u{FE0F}" },
-  { href: "/estoque-producao", label: "Producao", icon: "\u{1F4E6}" },
-  { href: "/balanco", label: "Balanco", icon: "\u{2696}\u{FE0F}" },
-  { href: "/relatorios", label: "Relatorios", icon: "\u{1F4CA}" },
-  { href: "/indicadores", label: "Indicadores", icon: "\u{1F4C8}" },
+const ITENS_TODOS = [
+  { href: "/", label: "Resumo", icon: "\u{1F3E0}", admin: false },
+  { href: "/setores", label: "Setores", icon: "\u{1F33E}", admin: true },
+  { href: "/fluxo-caixa", label: "Fluxo", icon: "\u{1F4B0}", admin: true },
+  { href: "/ponto", label: "Ponto", icon: "\u{1F550}", admin: false },
+  { href: "/manejo", label: "Manejo", icon: "\u{1F4C5}", admin: false },
+  { href: "/patrimonio", label: "Patrimonio", icon: "\u{1F69C}", admin: true },
+  { href: "/estoque-insumos", label: "Insumos", icon: "\u{1F6E2}\u{FE0F}", admin: true },
+  { href: "/estoque-producao", label: "Producao", icon: "\u{1F4E6}", admin: true },
+  { href: "/balanco", label: "Balanco", icon: "\u{2696}\u{FE0F}", admin: true },
+  { href: "/indicadores", label: "Indicadores", icon: "\u{1F4C8}", admin: true },
+  { href: "/relatorios", label: "Relatorios", icon: "\u{1F4CA}", admin: true },
 ];
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const usuario = useAuth();
+  const ehAdmin = usuario?.tipo === "chefe";
+
+  const itens = ITENS_TODOS.filter((item) => !item.admin || ehAdmin);
 
   return (
     <nav
@@ -27,7 +32,7 @@ export default function BottomNav() {
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <div className="mx-auto flex max-w-md justify-start overflow-x-auto">
-        {ITENS.map((item) => {
+        {itens.map((item) => {
           const ativo = pathname === item.href;
           return (
             <Link
