@@ -9,8 +9,7 @@ const PAGINAS_ADMIN = [
   "/balanco",
   "/indicadores",
   "/patrimonio",
-  "/estoque-insumos",
-  "/estoque-producao",
+  "/estoque",
   "/setores",
   "/funcionarios",
 ];

@@ -33,3 +33,15 @@ export async function PATCH(
   const atualizado = db.prepare("SELECT * FROM setores WHERE id = ?").get(id);
   return NextResponse.json(atualizado);
 }
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const id = Number(params.id);
+  if (!id) {
+    return NextResponse.json({ error: "id invalido" }, { status: 400 });
+  }
+  db.prepare("UPDATE setores SET ativo = 0 WHERE id = ?").run(id);
+  return NextResponse.json({ ok: true });
+}

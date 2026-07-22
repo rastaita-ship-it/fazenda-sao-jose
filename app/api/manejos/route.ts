@@ -10,6 +10,8 @@ export async function GET(req: NextRequest) {
   const setorId = searchParams.get("setor_id");
   const from = searchParams.get("from");
   const to = searchParams.get("to");
+  const funcionarioId = searchParams.get("funcionario_id");
+  const data = searchParams.get("data");
 
   let query = `
     SELECT m.*, s.nome AS setor_nome, s.cor AS setor_cor, f.nome AS funcionario_nome
@@ -32,6 +34,14 @@ export async function GET(req: NextRequest) {
     query += " AND m.data_planejada <= ?";
     params.push(to);
   }
+  if (funcionarioId) {
+    query += " AND m.funcionario_id = ?";
+    params.push(Number(funcionarioId));
+  }
+  if (data) {
+    query += " AND m.data_planejada = ?";
+    params.push(data);
+  }
 
   query += " ORDER BY m.data_planejada ASC";
 
@@ -39,13 +49,6 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(rows);
 }
 
-/**
- * POST /api/manejos
- * Cria uma atividade, que pode ser de 1 dia ou de varios (data_inicio/data_fim).
- * Todos os dias criados compartilham o mesmo grupo_id, permitindo tratar a
- * atividade como uma unica entidade depois (editar/excluir tudo de uma vez).
- * Body: { setor_id, atividade_nome, data_inicio, data_fim?, funcionario_id?, origem? }
- */
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const { setor_id, atividade_nome, data_inicio, data_fim, funcionario_id, observacao, origem } = body;

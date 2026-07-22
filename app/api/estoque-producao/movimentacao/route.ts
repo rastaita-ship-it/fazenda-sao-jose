@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-estoque";
+import "@/lib/db-custos";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -20,7 +21,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { produto_id, tipo, quantidade, data, descricao, transacao_id } = body;
+  const { produto_id, tipo, quantidade, data, descricao, preco_unitario } = body;
 
   if (!produto_id || !tipo || !quantidade || !data) {
     return NextResponse.json(
@@ -32,8 +33,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "tipo invalido" }, { status: 400 });
   }
 
-  const produto = db.prepare("SELECT * FROM estoque_producao WHERE id = ?").get(produto_id) as
-    | { quantidade_atual: number }
+  const produto = db
+    .prepare("SELECT * FROM estoque_producao WHERE id = ?")
+    .get(produto_id) as
+    | { quantidade_atual: number; produto: string; setor_id: number | null }
     | undefined;
   if (!produto) {
     return NextResponse.json({ error: "produto nao encontrado" }, { status: 404 });
@@ -47,19 +50,43 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  let transacaoId: number | null = null;
+
   const transacaoDb = db.transaction(() => {
-    db.prepare(
-      "INSERT INTO movimentacoes_producao (produto_id, tipo, quantidade, data, descricao, transacao_id) VALUES (?, ?, ?, ?, ?, ?)"
-    ).run(produto_id, tipo, quantidadeNum, data, descricao ?? null, transacao_id ?? null);
+    const movResult = db
+      .prepare(
+        "INSERT INTO movimentacoes_producao (produto_id, tipo, quantidade, data, descricao) VALUES (?, ?, ?, ?, ?)"
+      )
+      .run(produto_id, tipo, quantidadeNum, data, descricao ?? null);
 
     const delta = tipo === "entrada" ? quantidadeNum : -quantidadeNum;
     db.prepare("UPDATE estoque_producao SET quantidade_atual = quantidade_atual + ? WHERE id = ?").run(
       delta,
       produto_id
     );
+
+    if (tipo === "saida" && preco_unitario && produto.setor_id) {
+      const valorTotal = quantidadeNum * Number(preco_unitario);
+      const transacaoResult = db
+        .prepare(
+          `INSERT INTO transacoes (setor_id, tipo, categoria, descricao, valor, data, status)
+           VALUES (?, 'receita', 'Venda de producao', ?, ?, ?, 'pago')`
+        )
+        .run(
+          produto.setor_id,
+          descricao || `Venda de ${produto.produto}`,
+          valorTotal,
+          data
+        );
+      transacaoId = Number(transacaoResult.lastInsertRowid);
+      db.prepare("UPDATE movimentacoes_producao SET transacao_id = ? WHERE id = ?").run(
+        transacaoId,
+        movResult.lastInsertRowid
+      );
+    }
   });
   transacaoDb();
 
   const atualizado = db.prepare("SELECT * FROM estoque_producao WHERE id = ?").get(produto_id);
-  return NextResponse.json(atualizado, { status: 201 });
+  return NextResponse.json({ ...(atualizado as object), transacao_id: transacaoId }, { status: 201 });
 }
