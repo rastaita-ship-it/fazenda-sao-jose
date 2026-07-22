@@ -17,6 +17,7 @@ const ITENS_TODOS = [
   { href: "/clima", label: "Clima", icon: "\u{2600}\u{FE0F}", admin: false },
   { href: "/ferramentas", label: "Ferramentas", icon: "\u{1F9EE}", admin: false },
   { href: "/mural", label: "Mural", icon: "\u{1F4CC}", admin: false },
+  { href: "/cotacao", label: "Cotacao", icon: "\u{1F4C8}", admin: false },
   { href: "/emergencia", label: "Emergencia", icon: "\u{1F6A8}", admin: false },
   { href: "/configuracoes", label: "Config", icon: "\u{2699}\u{FE0F}", admin: false },
 ];

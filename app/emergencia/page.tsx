@@ -80,10 +80,38 @@ export default function EmergenciaPage() {
     carregar();
   }
 
+  function acionarSOS() {
+    const enviar = (mapsUrl?: string) => {
+      const local = mapsUrl ? ` Minha localizacao: ${mapsUrl}` : "";
+      const mensagem = `EMERGENCIA na Fazenda Sao Jose. Preciso de ajuda urgente.${local}`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(mensagem)}`, "_blank");
+    };
+
+    if (!navigator.geolocation) {
+      enviar();
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const url = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
+        enviar(url);
+      },
+      () => enviar(),
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  }
+
   return (
     <>
       <Header titulo="Emergencia" subtitulo="Contatos rapidos" />
       <div className="space-y-3 p-4">
+        <button
+          onClick={acionarSOS}
+          className="w-full rounded-2xl bg-danger py-4 text-center text-base font-bold text-white active:opacity-80"
+        >
+          SOS - Enviar minha localizacao
+        </button>
+
         {usuario?.tipo === "chefe" && (
           <button className="btn-primary w-full" onClick={() => setMostrarForm(true)}>
             + Adicionar contato
