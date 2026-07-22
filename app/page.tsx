@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Header from "@/components/layout/Header";
 import SummaryCards from "@/components/dashboard/SummaryCards";
 import QuickAddButtons from "@/components/dashboard/QuickAddButtons";
 import SectorBreakdown from "@/components/dashboard/SectorBreakdown";
@@ -47,7 +46,9 @@ export default function DashboardPage() {
 
   return (
     <>
-      <Header titulo="Fazenda Sao Jose" />
+      <div className="sticky top-0 z-30 border-b border-neutral-200 bg-white/95 py-4 text-center backdrop-blur dark:border-neutral-800 dark:bg-neutral-950/95">
+        <p className="text-lg font-bold text-brand-600 dark:text-brand-400">Fazenda Sao Jose</p>
+      </div>
 
       <div className="space-y-4 p-4">
         <div className="grid grid-cols-3 gap-2">
