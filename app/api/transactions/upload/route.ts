@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-recibo";
+import { pastaUpload } from "@/lib/uploads";
 import fs from "fs";
 import path from "path";
-
-const PASTA = path.join(process.cwd(), "public", "uploads", "recibos");
 
 export async function POST(req: NextRequest) {
   const formData = await req.formData();
@@ -19,12 +18,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Formato nao suportado." }, { status: 400 });
   }
 
-  if (!fs.existsSync(PASTA)) fs.mkdirSync(PASTA, { recursive: true });
+  const pastaDestino = pastaUpload("recibos");
   const nomeArquivo = `recibo-${transacaoId}-${Date.now()}${ext}`;
   const bytes = await arquivo.arrayBuffer();
-  fs.writeFileSync(path.join(PASTA, nomeArquivo), Buffer.from(bytes));
+  fs.writeFileSync(path.join(pastaDestino, nomeArquivo), Buffer.from(bytes));
 
-  const urlPublica = `/uploads/recibos/${nomeArquivo}`;
+  const urlPublica = `/api/uploads/recibos/${nomeArquivo}`;
   db.prepare("UPDATE transacoes SET recibo_url = ? WHERE id = ?").run(urlPublica, transacaoId);
 
   return NextResponse.json({ url: urlPublica });

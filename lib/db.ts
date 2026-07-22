@@ -14,7 +14,7 @@ import fs from "fs";
  * -----------------------------------------------------------------------
  */
 
-const DATA_DIR = path.join(process.cwd(), "data");
+const DATA_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH || path.join(process.cwd(), "data");
 const DB_PATH = path.join(DATA_DIR, "fazenda.db");
 
 if (!fs.existsSync(DATA_DIR)) {

@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-galeria";
+import { pastaUpload } from "@/lib/uploads";
 import fs from "fs";
 import path from "path";
-
-const PASTA = path.join(process.cwd(), "public", "uploads", "galeria");
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -44,11 +43,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Envie uma imagem valida." }, { status: 400 });
   }
 
-  if (!fs.existsSync(PASTA)) fs.mkdirSync(PASTA, { recursive: true });
+  const pastaDestino = pastaUpload("galeria");
   const nomeArquivo = `registro-${Date.now()}${ext}`;
   const bytes = await arquivo.arrayBuffer();
-  fs.writeFileSync(path.join(PASTA, nomeArquivo), Buffer.from(bytes));
-  const fotoUrl = `/uploads/galeria/${nomeArquivo}`;
+  fs.writeFileSync(path.join(pastaDestino, nomeArquivo), Buffer.from(bytes));
+  const fotoUrl = `/api/uploads/galeria/${nomeArquivo}`;
 
   const result = db
     .prepare(

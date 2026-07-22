@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-patrimonio-arquivos";
+import { pastaUpload } from "@/lib/uploads";
 import fs from "fs";
 import path from "path";
-
-const PASTA_UPLOADS = path.join(process.cwd(), "public", "uploads", "patrimonio");
 
 function extensaoPermitida(nome: string, tipoCampo: string) {
   const ext = path.extname(nome).toLowerCase();
@@ -33,18 +32,15 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (!fs.existsSync(PASTA_UPLOADS)) {
-    fs.mkdirSync(PASTA_UPLOADS, { recursive: true });
-  }
-
+  const pastaDestino = pastaUpload("patrimonio");
   const ext = path.extname(arquivo.name).toLowerCase();
   const nomeArquivo = `${tipoCampo}-${patrimonioId}-${Date.now()}${ext}`;
-  const caminhoCompleto = path.join(PASTA_UPLOADS, nomeArquivo);
+  const caminhoCompleto = path.join(pastaDestino, nomeArquivo);
 
   const bytes = await arquivo.arrayBuffer();
   fs.writeFileSync(caminhoCompleto, Buffer.from(bytes));
 
-  const urlPublica = `/uploads/patrimonio/${nomeArquivo}`;
+  const urlPublica = `/api/uploads/patrimonio/${nomeArquivo}`;
   const coluna = tipoCampo === "foto" ? "foto_url" : "manual_url";
 
   db.prepare(`UPDATE patrimonio SET ${coluna} = ? WHERE id = ?`).run(urlPublica, patrimonioId);
