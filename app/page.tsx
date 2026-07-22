@@ -7,9 +7,18 @@ import QuickAddButtons from "@/components/dashboard/QuickAddButtons";
 import SectorBreakdown from "@/components/dashboard/SectorBreakdown";
 import { ResumoFinanceiro } from "@/lib/types";
 
+const FAZENDA_LAT = -15.7639781;
+const FAZENDA_LON = -39.4699029;
+
+interface ClimaAtual {
+  temperatura: number;
+  umidade: number;
+}
+
 export default function DashboardPage() {
   const [resumo, setResumo] = useState<ResumoFinanceiro | null>(null);
   const [carregando, setCarregando] = useState(true);
+  const [clima, setClima] = useState<ClimaAtual | null>(null);
 
   const carregarResumo = useCallback(() => {
     setCarregando(true);
@@ -23,6 +32,19 @@ export default function DashboardPage() {
     carregarResumo();
   }, [carregarResumo]);
 
+  useEffect(() => {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${FAZENDA_LAT}&longitude=${FAZENDA_LON}&current=temperature_2m,relative_humidity_2m&timezone=auto`;
+    fetch(url)
+      .then((r) => r.json())
+      .then((dados) => {
+        setClima({
+          temperatura: dados.current.temperature_2m,
+          umidade: dados.current.relative_humidity_2m,
+        });
+      })
+      .catch(() => setClima(null));
+  }, []);
+
   return (
     <>
       <Header titulo="Fazenda Sao Jose" />
@@ -34,7 +56,14 @@ export default function DashboardPage() {
             className="flex flex-col items-center gap-1 rounded-2xl bg-white p-3 text-center shadow-sm dark:bg-neutral-900"
           >
             <span className="text-2xl">{"\u2600\uFE0F"}</span>
-            <span className="text-xs font-medium">Clima</span>
+            {clima ? (
+              <>
+                <span className="text-sm font-bold">{Math.round(clima.temperatura)}C</span>
+                <span className="text-[10px] text-neutral-400">Umid. {Math.round(clima.umidade)}%</span>
+              </>
+            ) : (
+              <span className="text-xs font-medium">Clima</span>
+            )}
           </a>
           <a
             href="/indicadores"
