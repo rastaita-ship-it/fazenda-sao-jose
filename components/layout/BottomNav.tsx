@@ -19,7 +19,6 @@ const ITENS_TODOS = [
   { href: "/mural", label: "Mural", icon: "\u{1F4CC}", admin: false },
   { href: "/galeria", label: "Galeria", icon: "\u{1F4F7}", admin: false },
   { href: "/cotacao", label: "Cotacao", icon: "\u{1F4C8}", admin: false },
-  { href: "/emergencia", label: "Emergencia", icon: "\u{1F6A8}", admin: false },
   { href: "/configuracoes", label: "Config", icon: "\u{2699}\u{FE0F}", admin: false },
 ];
 
