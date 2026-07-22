@@ -29,6 +29,10 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     if (usuario === undefined) return;
     if (!usuario && pathname !== "/login") {
       router.push("/login");
+      return;
+    }
+    if (usuario && usuario.tipo !== "chefe" && pathname === "/") {
+      router.push("/ponto");
     }
   }, [usuario, pathname, router]);
 
@@ -48,6 +52,10 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     return null;
   }
 
+  if (usuario.tipo !== "chefe" && pathname === "/") {
+    return null;
+  }
+
   const ehPaginaAdmin = PAGINAS_ADMIN.some((p) => pathname.startsWith(p));
   if (ehPaginaAdmin && usuario.tipo !== "chefe") {
     return (
@@ -59,11 +67,8 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
           <p className="mt-2 text-sm text-neutral-500">
             Essa area e apenas para administradores.
           </p>
-          <button
-            onClick={() => router.push("/")}
-            className="btn-primary mt-6"
-          >
-            Voltar ao inicio
+          <button onClick={() => router.push("/ponto")} className="btn-primary mt-6">
+            Ir para o Ponto
           </button>
         </div>
       </AuthContext.Provider>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Header from "@/components/layout/Header";
+import AvisoAtividadesHoje from "@/components/dashboard/AvisoAtividadesHoje";
 
 interface Funcionario {
   id: number;
@@ -151,6 +152,7 @@ export default function PontoPage() {
     <>
       <Header titulo="Ponto Eletronico" subtitulo="Registro de entrada e saida" />
       <div className="space-y-3 p-4">
+        <AvisoAtividadesHoje />
         {mensagem && (
           <div className="card border-brand-300 bg-brand-50 text-center text-sm font-medium text-brand-700 dark:bg-brand-900/30 dark:text-brand-300">
             {mensagem}
