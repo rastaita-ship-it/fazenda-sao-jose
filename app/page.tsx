@@ -47,7 +47,7 @@ export default function DashboardPage() {
         ) : (
           <>
             <SummaryCards resumo={resumo} />
-            <SectorBreakdown resumo={resumo} />
+            <SectorBreakdown resumo={resumo} onAtualizado={carregarResumo} />
           </>
         )}
       </div>
