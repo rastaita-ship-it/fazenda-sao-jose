@@ -27,6 +27,8 @@ export default function FluxoCaixaPage() {
   const [editValor, setEditValor] = useState("");
   const [editData, setEditData] = useState("");
   const [editStatus, setEditStatus] = useState("pago");
+  const [editRecibo, setEditRecibo] = useState<string | null>(null);
+  const [enviandoRecibo, setEnviandoRecibo] = useState(false);
 
   function carregar() {
     setCarregando(true);
@@ -63,6 +65,25 @@ export default function FluxoCaixaPage() {
     setEditValor(String(t.valor));
     setEditData(t.data);
     setEditStatus(t.status);
+    setEditRecibo(t.recibo_url);
+  }
+
+  async function enviarRecibo(arquivo: File) {
+    if (!editandoId) return;
+    setEnviandoRecibo(true);
+    const formData = new FormData();
+    formData.append("arquivo", arquivo);
+    formData.append("transacao_id", String(editandoId));
+    try {
+      const res = await fetch("/api/transactions/upload", { method: "POST", body: formData });
+      if (res.ok) {
+        const dados = await res.json();
+        setEditRecibo(dados.url);
+        carregar();
+      }
+    } finally {
+      setEnviandoRecibo(false);
+    }
   }
 
   async function salvarEdicao() {
@@ -250,6 +271,29 @@ export default function FluxoCaixaPage() {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              <div className="rounded-2xl border border-neutral-200 p-3 dark:border-neutral-700">
+                <label className="mb-1 block text-xs font-medium text-neutral-500">
+                  Foto do recibo / nota fiscal
+                </label>
+                {editRecibo && (
+                  <a href={editRecibo} target="_blank" rel="noreferrer" className="mb-2 block">
+                    <img src={editRecibo} alt="Recibo" className="h-24 w-24 rounded-xl object-cover" />
+                  </a>
+                )}
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  capture="environment"
+                  disabled={enviandoRecibo}
+                  onChange={(e) => {
+                    const arquivo = e.target.files?.[0];
+                    if (arquivo) enviarRecibo(arquivo);
+                  }}
+                  className="block w-full text-xs text-neutral-500"
+                />
+                {enviandoRecibo && <p className="mt-1 text-xs text-neutral-400">Enviando...</p>}
               </div>
 
               <button

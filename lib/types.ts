@@ -21,6 +21,7 @@ export interface Transacao {
   data: string; // YYYY-MM-DD
   status: StatusTransacao;
   criado_em: string;
+  recibo_url: string | null;
 }
 
 export interface TransacaoComSetor extends Transacao {
