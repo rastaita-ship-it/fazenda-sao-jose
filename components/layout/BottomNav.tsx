@@ -12,13 +12,10 @@ const ITENS_TODOS = [
   { href: "/patrimonio", label: "Patrimonio", icon: "\u{1F69C}", admin: true },
   { href: "/estoque", label: "Estoque", icon: "\u{1F4E6}", admin: true },
   { href: "/balanco", label: "Balanco", icon: "\u{2696}\u{FE0F}", admin: true },
-  { href: "/indicadores", label: "Indicadores", icon: "\u{1F4C8}", admin: true },
   { href: "/relatorios", label: "Relatorios", icon: "\u{1F4CA}", admin: true },
-  { href: "/clima", label: "Clima", icon: "\u{2600}\u{FE0F}", admin: false },
   { href: "/ferramentas", label: "Ferramentas", icon: "\u{1F527}", admin: false },
   { href: "/mural", label: "Mural", icon: "\u{1F4CC}", admin: false },
   { href: "/galeria", label: "Galeria", icon: "\u{1F4F7}", admin: false },
-  { href: "/cotacao", label: "Cotacao", icon: "\u{1F4C8}", admin: false },
   { href: "/configuracoes", label: "Config", icon: "\u{2699}\u{FE0F}", admin: false },
 ];
 
