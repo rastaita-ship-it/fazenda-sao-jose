@@ -36,6 +36,14 @@ export default function ConfiguracoesPage() {
           </a>
         )}
 
+        <a
+          href="/conhecimento"
+          className="card flex items-center justify-between"
+        >
+          <span className="text-sm font-medium">Central de conhecimento</span>
+          <span className="text-neutral-400">{">"}</span>
+        </a>
+
         <button
           onClick={sair}
           className="btn-danger w-full"
