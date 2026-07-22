@@ -46,8 +46,8 @@ export default function DashboardPage() {
 
   return (
     <>
-      <div className="sticky top-0 z-30 border-b border-neutral-200 bg-white/95 py-4 text-center backdrop-blur dark:border-neutral-800 dark:bg-neutral-950/95">
-        <p className="text-lg font-bold text-brand-600 dark:text-brand-400">Fazenda Sao Jose</p>
+      <div className="sticky top-0 z-30 border-b border-neutral-200 bg-white/95 py-3 text-center backdrop-blur dark:border-neutral-800 dark:bg-neutral-950/95">
+        <img src="/logo.png" alt="Fazenda Sao Jose" className="mx-auto h-16 w-16 object-contain" />
       </div>
 
       <div className="space-y-4 p-4">
