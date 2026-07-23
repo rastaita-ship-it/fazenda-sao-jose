@@ -95,12 +95,20 @@ export default function DashboardPage() {
           </>
         )}
 
-        <a
-          href="/emergencia"
-          className="block w-full rounded-2xl bg-danger py-4 text-center text-base font-bold text-white active:opacity-80"
-        >
-          {"\u{1F6A8}"} Emergencia
-        </a>
+        <div className="grid grid-cols-2 gap-2">
+          <a
+            href="/emergencia"
+            className="rounded-2xl bg-danger py-4 text-center text-base font-bold text-white active:opacity-80"
+          >
+            {"\u{1F6A8}"} Emergencia
+          </a>
+          <a
+            href="/mural"
+            className="rounded-2xl bg-brand-600 py-4 text-center text-base font-bold text-white active:opacity-80"
+          >
+            {"\u{1F4CC}"} Mural
+          </a>
+        </div>
       </div>
     </>
   );
