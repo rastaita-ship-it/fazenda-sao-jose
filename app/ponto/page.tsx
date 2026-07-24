@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Header from "@/components/layout/Header";
 import AvisoAtividadesHoje from "@/components/dashboard/AvisoAtividadesHoje";
+import { useAuth } from "@/components/auth/AuthContext";
 
 interface Funcionario {
   id: number;
@@ -49,6 +50,7 @@ function obterLocalizacao(): Promise<{ latitude: number; longitude: number }> {
 }
 
 export default function PontoPage() {
+  const usuario = useAuth();
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
   const [registrosHoje, setRegistrosHoje] = useState<RegistroPonto[]>([]);
   const [batendoId, setBatendoId] = useState<number | null>(null);
@@ -208,6 +210,8 @@ export default function PontoPage() {
           );
         })}
 
+        {usuario?.tipo === "chefe" && (
+        <>
         {!mostrarForm ? (
           <button className="btn-primary w-full" onClick={() => setMostrarForm(true)}>
             + Cadastrar funcionario
@@ -300,6 +304,8 @@ export default function PontoPage() {
               </button>
             </div>
           </div>
+        )}
+        </>
         )}
       </div>
     </>

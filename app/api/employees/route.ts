@@ -14,6 +14,22 @@ export interface Funcionario {
   criado_em: string;
 }
 
+function ehAdminLogado(req: NextRequest) {
+  const funcionarioId = req.cookies.get("funcionario_id")?.value;
+  if (!funcionarioId) return false;
+  const usuario = db
+    .prepare("SELECT tipo FROM funcionarios WHERE id = ? AND ativo = 1")
+    .get(funcionarioId) as { tipo: string } | undefined;
+  return usuario?.tipo === "chefe";
+}
+
+function existeAdmin() {
+  const admin = db
+    .prepare("SELECT id FROM funcionarios WHERE tipo = 'chefe' AND pin IS NOT NULL AND ativo = 1")
+    .get();
+  return !!admin;
+}
+
 export async function GET() {
   const funcionarios = db
     .prepare(
@@ -24,6 +40,15 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const bancoVazio = !existeAdmin();
+
+  if (!bancoVazio && !ehAdminLogado(req)) {
+    return NextResponse.json(
+      { error: "Apenas administradores podem cadastrar funcionarios." },
+      { status: 403 }
+    );
+  }
+
   const body = await req.json();
   const { nome, funcao, tipo, pin, tipo_contrato, salario_mensal } = body;
 
@@ -33,7 +58,10 @@ export async function POST(req: NextRequest) {
   if (!pin || !/^[0-9]{4}$/.test(pin)) {
     return NextResponse.json({ error: "PIN deve ter exatamente 4 numeros." }, { status: 400 });
   }
-  const tipoFinal = tipo === "chefe" ? "chefe" : "campo";
+
+  // So permite criar administrador se o banco estiver vazio (primeiro acesso)
+  // ou se quem esta pedindo ja e administrador logado.
+  const tipoFinal = tipo === "chefe" && (bancoVazio || ehAdminLogado(req)) ? "chefe" : "campo";
   const tipoContratoFinal = tipo_contrato === "diarista" ? "diarista" : "fixo";
 
   const pinEmUso = db.prepare("SELECT id FROM funcionarios WHERE pin = ? AND ativo = 1").get(pin);
