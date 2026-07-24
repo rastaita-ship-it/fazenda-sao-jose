@@ -14,6 +14,7 @@ const ITENS_TODOS = [
   { href: "/balanco", label: "Balanco", icon: "\u{2696}\u{FE0F}", admin: true },
   { href: "/relatorios", label: "Relatorios", icon: "\u{1F4CA}", admin: true },
   { href: "/ferramentas", label: "Ferramentas", icon: "\u{1F527}", admin: false },
+  { href: "/mentor", label: "Mentor", icon: "\u{1F9D1}\u200D\u{1F33E}", admin: false },
   { href: "/galeria", label: "Galeria", icon: "\u{1F4F7}", admin: false },
   { href: "/configuracoes", label: "Config", icon: "\u{2699}\u{FE0F}", admin: false },
 ];

@@ -29,10 +29,6 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     if (usuario === undefined) return;
     if (!usuario && pathname !== "/login") {
       router.push("/login");
-      return;
-    }
-    if (usuario && usuario.tipo !== "chefe" && pathname === "/") {
-      router.push("/ponto");
     }
   }, [usuario, pathname, router]);
 
@@ -49,10 +45,6 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
   }
 
   if (!usuario) {
-    return null;
-  }
-
-  if (usuario.tipo !== "chefe" && pathname === "/") {
     return null;
   }
 
