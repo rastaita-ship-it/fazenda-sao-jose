@@ -153,7 +153,6 @@ function PaginaCampo() {
   const itens = [
     { href: "/ponto", label: "Ponto", icon: "\u{1F550}" },
     { href: "/manejo", label: "Manejo", icon: "\u{1F4C5}" },
-    { href: "/mentor", label: "Mentor Rural", icon: "\u{1F9D1}\u200D\u{1F33E}" },
     { href: "/conhecimento", label: "Conhecimento", icon: "\u{1F4D6}" },
     { href: "/ferramentas", label: "Ferramentas", icon: "\u{1F527}" },
     { href: "/galeria", label: "Galeria", icon: "\u{1F4F7}" },
@@ -167,6 +166,13 @@ function PaginaCampo() {
       </div>
       <div className="space-y-4 p-4">
         <AvisoAtividadesHoje />
+
+        <a
+          href="/mentor"
+          className="block w-full rounded-2xl bg-brand-600 py-5 text-center text-lg font-bold text-white shadow-md active:opacity-80"
+        >
+          {"\u{1F9D1}\u200D\u{1F33E}"} Mentor Rural
+        </a>
 
         <div className="grid grid-cols-3 gap-2">
           <CartaoClima clima={clima} />
