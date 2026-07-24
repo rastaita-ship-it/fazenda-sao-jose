@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-area";
 import "@/lib/db-estoque";
+import { ehAdminLogado } from "@/lib/auth-helpers";
 
 interface SetorRow {
   id: number;
@@ -11,6 +12,10 @@ interface SetorRow {
 }
 
 export async function GET(req: NextRequest) {
+  if (!ehAdminLogado(req)) {
+    return NextResponse.json({ error: "Apenas administradores." }, { status: 403 });
+  }
+
   const { searchParams } = new URL(req.url);
   const now = new Date();
   const defaultFrom = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;

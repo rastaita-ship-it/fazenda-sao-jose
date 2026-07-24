@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-patrimonio";
+import { ehAdminLogado } from "@/lib/auth-helpers";
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  if (!ehAdminLogado(req)) {
+    return NextResponse.json({ error: "Apenas administradores." }, { status: 403 });
+  }
+
   const id = Number(params.id);
   if (!id) {
     return NextResponse.json({ error: "id invalido" }, { status: 400 });
@@ -48,6 +53,10 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  if (!ehAdminLogado(req)) {
+    return NextResponse.json({ error: "Apenas administradores." }, { status: 403 });
+  }
+
   const id = Number(params.id);
   db.prepare("UPDATE patrimonio SET status = 'vendido' WHERE id = ?").run(id);
   return NextResponse.json({ ok: true });

@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-estoque";
+import { ehAdminLogado } from "@/lib/auth-helpers";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  if (!ehAdminLogado(req)) {
+    return NextResponse.json({ error: "Apenas administradores." }, { status: 403 });
+  }
+
   const itens = db
     .prepare(
       `SELECT p.*, s.nome AS setor_nome, s.cor AS setor_cor
@@ -15,6 +20,10 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  if (!ehAdminLogado(req)) {
+    return NextResponse.json({ error: "Apenas administradores." }, { status: 403 });
+  }
+
   const body = await req.json();
   const { produto, setor_id, unidade, quantidade_atual, local_armazenamento, observacao } = body;
 

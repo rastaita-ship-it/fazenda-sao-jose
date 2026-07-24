@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import "@/lib/db-ponto";
 import "@/lib/db-custos";
 import "@/lib/db-salario";
 import "@/lib/db-patrimonio";
+import { ehAdminLogado } from "@/lib/auth-helpers";
+import "@/lib/db-ponto";
 
 function diasNoPeriodo(from: string, to: string) {
   const inicio = new Date(from + "T12:00:00");
@@ -13,6 +14,10 @@ function diasNoPeriodo(from: string, to: string) {
 }
 
 export async function GET(req: NextRequest) {
+  if (!ehAdminLogado(req)) {
+    return NextResponse.json({ error: "Apenas administradores." }, { status: 403 });
+  }
+
   const { searchParams } = new URL(req.url);
   const now = new Date();
   const defaultFrom = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;

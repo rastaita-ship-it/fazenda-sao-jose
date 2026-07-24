@@ -2,10 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-recibo";
 import { pastaUpload } from "@/lib/uploads";
+import { ehAdminLogado } from "@/lib/auth-helpers";
 import fs from "fs";
 import path from "path";
 
 export async function POST(req: NextRequest) {
+  if (!ehAdminLogado(req)) {
+    return NextResponse.json({ error: "Apenas administradores." }, { status: 403 });
+  }
+
   const formData = await req.formData();
   const arquivo = formData.get("arquivo") as File | null;
   const transacaoId = formData.get("transacao_id") as string | null;

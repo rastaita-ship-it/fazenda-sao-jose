@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-patrimonio";
+import { ehAdminLogado } from "@/lib/auth-helpers";
 
 export async function GET(req: NextRequest) {
+  if (!ehAdminLogado(req)) {
+    return NextResponse.json({ error: "Apenas administradores." }, { status: 403 });
+  }
+
   const { searchParams } = new URL(req.url);
   const tipo = searchParams.get("tipo");
 
@@ -19,6 +24,10 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  if (!ehAdminLogado(req)) {
+    return NextResponse.json({ error: "Apenas administradores." }, { status: 403 });
+  }
+
   const body = await req.json();
   const {
     nome,
