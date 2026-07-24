@@ -165,7 +165,7 @@ export default function FuncionariosPage() {
                         : "bg-neutral-200 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300"
                     }`}
                   >
-                    {f.tipo === "chefe" ? "Administrador" : "Funcionario de campo"}
+                    {f.tipo === "chefe" ? "Administrador" : "Colaborador"}
                   </span>
                   <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-500 dark:bg-neutral-800">
                     {f.tipo_contrato === "fixo" ? "Fixo" : "Diarista"}
@@ -232,7 +232,7 @@ export default function FuncionariosPage() {
                       : "border-neutral-300 text-neutral-500 dark:border-neutral-700"
                   }`}
                 >
-                  Funcionario de campo
+                  Colaborador
                 </button>
                 <button
                   onClick={() => setTipo("chefe")}

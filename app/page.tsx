@@ -16,10 +16,19 @@ interface ClimaAtual {
   umidade: number;
 }
 
-function CabecalhoLogo() {
+function CabecalhoLogo({ mostrarConfig }: { mostrarConfig?: boolean }) {
   return (
     <div className="sticky top-0 z-30 border-b border-neutral-200 bg-white/95 py-3 text-center backdrop-blur dark:border-neutral-800 dark:bg-neutral-950/95">
       <img src="/logo.png" alt="Fazenda Sao Jose" className="mx-auto h-auto w-64" />
+      {mostrarConfig && (
+        <a
+          href="/configuracoes"
+          aria-label="Configuracoes"
+          className="absolute right-4 top-4 rounded-full bg-white p-2 text-xl shadow-sm dark:bg-neutral-900"
+        >
+          {"\u2699\uFE0F"}
+        </a>
+      )}
     </div>
   );
 }
@@ -141,51 +150,44 @@ function PaginaAdmin() {
 function PaginaCampo() {
   const clima = useClimaAtual();
 
+  const itens = [
+    { href: "/ponto", label: "Ponto", icon: "\u{1F550}" },
+    { href: "/manejo", label: "Manejo", icon: "\u{1F4C5}" },
+    { href: "/mentor", label: "Mentor Rural", icon: "\u{1F9D1}\u200D\u{1F33E}" },
+    { href: "/conhecimento", label: "Conhecimento", icon: "\u{1F4D6}" },
+    { href: "/ferramentas", label: "Ferramentas", icon: "\u{1F527}" },
+    { href: "/galeria", label: "Galeria", icon: "\u{1F4F7}" },
+    { href: "/mural", label: "Mural", icon: "\u{1F4CC}" },
+  ];
+
   return (
     <>
-      <CabecalhoLogo />
+      <div className="relative">
+        <CabecalhoLogo mostrarConfig />
+      </div>
       <div className="space-y-4 p-4">
+        <AvisoAtividadesHoje />
+
         <div className="grid grid-cols-3 gap-2">
           <CartaoClima clima={clima} />
-          <a
-            href="/ponto"
-            className="flex flex-col items-center gap-1 rounded-2xl bg-white p-3 text-center shadow-sm dark:bg-neutral-900"
-          >
-            <span className="text-2xl">{"\u{1F550}"}</span>
-            <span className="text-xs font-medium">Ponto</span>
-          </a>
-          <a
-            href="/manejo"
-            className="flex flex-col items-center gap-1 rounded-2xl bg-white p-3 text-center shadow-sm dark:bg-neutral-900"
-          >
-            <span className="text-2xl">{"\u{1F4C5}"}</span>
-            <span className="text-xs font-medium">Manejo</span>
-          </a>
+          {itens.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              className="flex flex-col items-center gap-1 rounded-2xl bg-white p-3 text-center shadow-sm dark:bg-neutral-900"
+            >
+              <span className="text-2xl">{item.icon}</span>
+              <span className="text-xs font-medium">{item.label}</span>
+            </a>
+          ))}
         </div>
 
         <a
-          href="/mentor"
-          className="block w-full rounded-2xl bg-brand-600 py-5 text-center text-lg font-bold text-white active:opacity-80"
+          href="/emergencia"
+          className="block w-full rounded-2xl bg-danger py-4 text-center text-base font-bold text-white active:opacity-80"
         >
-          {"\u{1F9D1}\u200D\u{1F33E}"} Mentor Rural
+          {"\u{1F6A8}"} Emergencia
         </a>
-
-        <AvisoAtividadesHoje />
-
-        <div className="grid grid-cols-2 gap-2">
-          <a
-            href="/emergencia"
-            className="rounded-2xl bg-danger py-4 text-center text-base font-bold text-white active:opacity-80"
-          >
-            {"\u{1F6A8}"} Emergencia
-          </a>
-          <a
-            href="/mural"
-            className="rounded-2xl bg-brand-600 py-4 text-center text-base font-bold text-white active:opacity-80"
-          >
-            {"\u{1F4CC}"} Mural
-          </a>
-        </div>
       </div>
     </>
   );

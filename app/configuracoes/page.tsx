@@ -22,7 +22,7 @@ export default function ConfiguracoesPage() {
           <p className="text-xs text-neutral-500">Logado como</p>
           <p className="text-base font-semibold">{usuario?.nome}</p>
           <p className="text-xs text-neutral-400">
-            {usuario?.tipo === "chefe" ? "Administrador" : "Funcionario de campo"}
+            {usuario?.tipo === "chefe" ? "Administrador" : "Colaborador"}
           </p>
         </div>
 

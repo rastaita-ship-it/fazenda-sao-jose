@@ -239,7 +239,7 @@ export default function PontoPage() {
                     : "border-neutral-300 text-neutral-500 dark:border-neutral-700"
                 }`}
               >
-                Funcionario de campo
+                Colaborador
               </button>
               <button
                 onClick={() => setTipoNovo("chefe")}
