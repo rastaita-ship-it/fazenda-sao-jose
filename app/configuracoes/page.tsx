@@ -37,10 +37,10 @@ export default function ConfiguracoesPage() {
         )}
 
         <a
-          href="/conhecimento"
+          href="/mentor"
           className="card flex items-center justify-between"
         >
-          <span className="text-sm font-medium">Central de conhecimento</span>
+          <span className="text-sm font-medium">Mentor Rural</span>
           <span className="text-neutral-400">{">"}</span>
         </a>
 

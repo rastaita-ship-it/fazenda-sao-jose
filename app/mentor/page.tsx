@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Header from "@/components/layout/Header";
 
+const PALAVRAS_RAPIDAS = ["Castracao", "Fungo/ferrugem", "Bicheira", "Mastite", "Verminose", "Cio", "Poda", "Vacinacao"];
+
 export default function MentorPage() {
   const [pergunta, setPergunta] = useState("");
   const [foto, setFoto] = useState<File | null>(null);
@@ -65,6 +67,17 @@ export default function MentorPage() {
             }}
             className="block w-full text-xs text-neutral-500"
           />
+          <div className="flex flex-wrap gap-2">
+            {PALAVRAS_RAPIDAS.map((p) => (
+              <button
+                key={p}
+                onClick={() => setPergunta(p)}
+                className="rounded-full border border-neutral-300 px-3 py-1.5 text-xs font-medium text-neutral-500 dark:border-neutral-700"
+              >
+                {p}
+              </button>
+            ))}
+          </div>
           <textarea
             className="input-field min-h-[80px]"
             placeholder="O que voce quer perguntar? (ex: essa folha esta com fungo?)"

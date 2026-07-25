@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "pergunta e obrigatoria" }, { status: 400 });
   }
 
-  const chave = process.env.GEMINI_API_KEY;
+  const chave = process.env.ANTHROPIC_API_KEY;
   if (!chave) {
     return NextResponse.json(
       { error: "Chave de IA nao configurada no servidor." },
@@ -17,43 +17,49 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const partes: Record<string, unknown>[] = [
-    {
-      text: `Voce e um mentor tecnico rural, especializado em cafe, gado de corte/leite, ovinocultura e maquinas agricolas no Brasil. Responda de forma pratica, direta e curta (maximo 6 frases), em portugues. Se for enviada uma foto, analise ela com cuidado antes de responder. Pergunta do produtor: "${pergunta.trim()}"`,
-    },
-  ];
+  const conteudo: Record<string, unknown>[] = [];
 
   if (foto) {
     const bytes = await foto.arrayBuffer();
     const base64 = Buffer.from(bytes).toString("base64");
-    partes.push({
-      inline_data: {
-        mime_type: foto.type || "image/jpeg",
+    conteudo.push({
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: foto.type || "image/jpeg",
         data: base64,
       },
     });
   }
 
+  conteudo.push({
+    type: "text",
+    text: `Voce e um mentor tecnico rural, especializado em cafe, gado de corte/leite, ovinocultura e maquinas agricolas no Brasil. Responda de forma pratica, direta e curta (maximo 6 frases), em portugues. Se uma foto foi enviada, analise ela com cuidado antes de responder. Pergunta do produtor: "${pergunta.trim()}"`,
+  });
+
   try {
-    const resposta = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${chave}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: partes }],
-        }),
-      }
-    );
+    const resposta = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": chave,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-5",
+        max_tokens: 500,
+        messages: [{ role: "user", content: conteudo }],
+      }),
+    });
 
     if (!resposta.ok) {
       const erroTexto = await resposta.text();
-      console.error("Erro Gemini:", erroTexto);
+      console.error("Erro Claude:", erroTexto);
       return NextResponse.json({ error: "Erro ao consultar a IA." }, { status: 502 });
     }
 
     const dados = await resposta.json();
-    const texto = dados.candidates?.[0]?.content?.parts?.[0]?.text ?? "Nao foi possivel gerar uma resposta.";
+    const texto = dados.content?.[0]?.text ?? "Nao foi possivel gerar uma resposta.";
 
     return NextResponse.json({ resposta: texto });
   } catch (err) {

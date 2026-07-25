@@ -153,7 +153,6 @@ function PaginaCampo() {
   const itens = [
     { href: "/ponto", label: "Ponto", icon: "\u{1F550}" },
     { href: "/manejo", label: "Manejo", icon: "\u{1F4C5}" },
-    { href: "/conhecimento", label: "Conhecimento", icon: "\u{1F4D6}" },
     { href: "/ferramentas", label: "Ferramentas", icon: "\u{1F527}" },
     { href: "/galeria", label: "Galeria", icon: "\u{1F4F7}" },
     { href: "/mural", label: "Mural", icon: "\u{1F4CC}" },
