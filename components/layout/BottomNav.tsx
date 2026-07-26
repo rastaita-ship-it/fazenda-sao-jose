@@ -7,6 +7,7 @@ import { useAuth } from "@/components/auth/AuthContext";
 const ITENS_TODOS = [
   { href: "/", label: "Resumo", icon: "\u{1F3E0}", admin: false },
   { href: "/fluxo-caixa", label: "Fluxo", icon: "\u{1F4B0}", admin: true },
+  { href: "/diagnostico", label: "Diagnostico", icon: "\u{1FA7A}", admin: true },
   { href: "/ponto", label: "Ponto", icon: "\u{1F550}", admin: false },
   { href: "/manejo", label: "Manejo", icon: "\u{1F4C5}", admin: false },
   { href: "/patrimonio", label: "Patrimonio", icon: "\u{1F69C}", admin: true },
