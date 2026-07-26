@@ -76,7 +76,12 @@ export async function POST(req: NextRequest) {
     }
 
     const dados = await resposta.json();
-    const texto = dados.content?.[0]?.text ?? "Nao foi possivel gerar uma resposta.";
+    const texto = dados.content?.[0]?.text;
+
+    if (!texto) {
+      console.error("Resposta inesperada da Claude:", JSON.stringify(dados));
+      return NextResponse.json({ resposta: "Nao foi possivel gerar uma resposta." });
+    }
 
     return NextResponse.json({ resposta: texto });
   } catch (err) {
