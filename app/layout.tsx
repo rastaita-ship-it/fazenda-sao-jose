@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import BottomNav from "@/components/layout/BottomNav";
 import AuthGate from "@/components/auth/AuthGate";
+import RegistrarServiceWorker from "@/components/pwa/RegistrarServiceWorker";
 
 export const metadata: Metadata = {
   title: "Fazenda Sao Jose",
@@ -29,6 +30,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body>
+        <RegistrarServiceWorker />
         <AuthGate>
           <main className="mx-auto min-h-screen max-w-md pb-24">{children}</main>
           <BottomNav />
