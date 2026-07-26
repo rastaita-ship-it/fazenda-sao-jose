@@ -83,36 +83,82 @@ export default function PontoPage() {
     return registrosHoje.find((r) => r.funcionario_id === funcionarioId);
   }
 
+  const CHAVE_FILA_OFFLINE = "fila_ponto_offline";
+
+  function salvarNaFilaOffline(item: Record<string, unknown>) {
+    const filaAtual = JSON.parse(localStorage.getItem(CHAVE_FILA_OFFLINE) || "[]");
+    filaAtual.push(item);
+    localStorage.setItem(CHAVE_FILA_OFFLINE, JSON.stringify(filaAtual));
+  }
+
+  async function sincronizarFilaOffline() {
+    const fila: Record<string, unknown>[] = JSON.parse(
+      localStorage.getItem(CHAVE_FILA_OFFLINE) || "[]"
+    );
+    if (fila.length === 0) return;
+
+    const restante: Record<string, unknown>[] = [];
+    for (const item of fila) {
+      try {
+        const res = await fetch("/api/timeclock", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(item),
+        });
+        if (!res.ok) restante.push(item);
+      } catch {
+        restante.push(item);
+      }
+    }
+    localStorage.setItem(CHAVE_FILA_OFFLINE, JSON.stringify(restante));
+    if (restante.length < fila.length) {
+      carregarRegistrosHoje();
+    }
+  }
+
+  useEffect(() => {
+    sincronizarFilaOffline();
+    window.addEventListener("online", sincronizarFilaOffline);
+    return () => window.removeEventListener("online", sincronizarFilaOffline);
+  }, []);
+
   async function bater(funcionarioId: number) {
     setBatendoId(funcionarioId);
     setMensagem("");
     setMensagemErro("");
     try {
       const localizacao = await obterLocalizacao();
+      const corpo = {
+        funcionario_id: funcionarioId,
+        latitude: localizacao.latitude,
+        longitude: localizacao.longitude,
+      };
 
-      const res = await fetch("/api/timeclock", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          funcionario_id: funcionarioId,
-          latitude: localizacao.latitude,
-          longitude: localizacao.longitude,
-        }),
-      });
+      try {
+        const res = await fetch("/api/timeclock", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(corpo),
+        });
 
-      const dados = await res.json();
+        const dados = await res.json();
 
-      if (!res.ok) {
-        setMensagemErro(dados.error ?? "Nao foi possivel registrar o ponto.");
-        return;
+        if (!res.ok) {
+          setMensagemErro(dados.error ?? "Nao foi possivel registrar o ponto.");
+          return;
+        }
+
+        const nomeFunc = funcionarios.find((f) => f.id === funcionarioId)?.nome ?? "";
+        setMensagem(
+          `Registrado: ${dados.tipo === "entrada" ? "Entrada" : "Saida"} para ${nomeFunc} as ${formatarHora(dados.data_hora)}`
+        );
+        carregarRegistrosHoje();
+        setTimeout(() => setMensagem(""), 4000);
+      } catch {
+        salvarNaFilaOffline(corpo);
+        setMensagem("Sem sinal agora. Ponto salvo no celular e sera enviado quando a internet voltar.");
+        setTimeout(() => setMensagem(""), 6000);
       }
-
-      const nomeFunc = funcionarios.find((f) => f.id === funcionarioId)?.nome ?? "";
-      setMensagem(
-        `Registrado: ${dados.tipo === "entrada" ? "Entrada" : "Saida"} para ${nomeFunc} as ${formatarHora(dados.data_hora)}`
-      );
-      carregarRegistrosHoje();
-      setTimeout(() => setMensagem(""), 4000);
     } catch (err) {
       setMensagemErro(err instanceof Error ? err.message : "Erro ao obter localizacao.");
     } finally {
