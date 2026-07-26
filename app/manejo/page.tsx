@@ -145,6 +145,11 @@ export default function ManejoPage() {
   const [salvandoEdicao, setSalvandoEdicao] = useState(false);
   const [excluindoGrupoId, setExcluindoGrupoId] = useState<string | null>(null);
 
+  const [concluindoId, setConcluindoId] = useState<number | null>(null);
+  const [fotoConclusao, setFotoConclusao] = useState<File | null>(null);
+  const [previewConclusao, setPreviewConclusao] = useState<string | null>(null);
+  const [enviandoConclusao, setEnviandoConclusao] = useState(false);
+
   function alternarGrupo(chave: string) {
     setGruposAbertos((atual) => {
       const novo = new Set(atual);
@@ -194,14 +199,42 @@ export default function ManejoPage() {
       .then(setAtividadesPadrao);
   }, [setorAtual]);
 
-  async function marcarConcluido(id: number) {
-    const hoje = new Date().toISOString().slice(0, 10);
-    await fetch(`/api/manejos/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "concluido", data_realizada: hoje }),
-    });
-    carregarManejos();
+  function abrirConclusao(id: number) {
+    setConcluindoId(id);
+    setFotoConclusao(null);
+    setPreviewConclusao(null);
+  }
+
+  function selecionarFotoConclusao(arquivo: File) {
+    setFotoConclusao(arquivo);
+    setPreviewConclusao(URL.createObjectURL(arquivo));
+  }
+
+  async function confirmarConclusao() {
+    if (!concluindoId) return;
+    setEnviandoConclusao(true);
+    try {
+      const hoje = new Date().toISOString().slice(0, 10);
+      await fetch(`/api/manejos/${concluindoId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "concluido", data_realizada: hoje }),
+      });
+
+      if (fotoConclusao) {
+        const formData = new FormData();
+        formData.append("arquivo", fotoConclusao);
+        formData.append("manejo_id", String(concluindoId));
+        await fetch("/api/manejos/upload", { method: "POST", body: formData });
+      }
+
+      setConcluindoId(null);
+      setFotoConclusao(null);
+      setPreviewConclusao(null);
+      carregarManejos();
+    } finally {
+      setEnviandoConclusao(false);
+    }
   }
 
   async function criarManejo() {
@@ -388,7 +421,7 @@ export default function ManejoPage() {
 
                 {total === 1 && g.itens[0].status === "planejado" && (
                   <button
-                    onClick={() => marcarConcluido(g.itens[0].id)}
+                    onClick={() => abrirConclusao(g.itens[0].id)}
                     className="mt-2 w-full rounded-xl border border-brand-600 py-2 text-sm font-medium text-brand-600 dark:text-brand-400"
                   >
                     Marcar como concluido
@@ -409,7 +442,7 @@ export default function ManejoPage() {
                         </div>
                         {m.status === "planejado" && (
                           <button
-                            onClick={() => marcarConcluido(m.id)}
+                            onClick={() => abrirConclusao(m.id)}
                             className="rounded-xl border border-brand-600 px-2 py-1 text-[11px] font-medium text-brand-600 dark:text-brand-400"
                           >
                             Concluir
@@ -597,6 +630,52 @@ export default function ManejoPage() {
                 onClick={salvarEdicaoGrupo}
               >
                 {salvandoEdicao ? "Salvando..." : "Salvar alteracoes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {concluindoId && (
+        <div className="fixed inset-0 z-50 flex items-end bg-black/40 sm:items-center sm:justify-center">
+          <div className="w-full rounded-t-3xl bg-white p-5 dark:bg-neutral-900 sm:max-w-md sm:rounded-3xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-bold">Concluir atividade</h2>
+              <button
+                onClick={() => setConcluindoId(null)}
+                className="text-2xl leading-none text-neutral-400"
+                aria-label="Fechar"
+              >
+                x
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-sm text-neutral-500">
+                Se quiser, anexe uma foto como comprovante da atividade concluida (opcional).
+              </p>
+
+              {previewConclusao && (
+                <img src={previewConclusao} alt="Foto da conclusao" className="h-40 w-full rounded-2xl object-cover" />
+              )}
+
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={(e) => {
+                  const arquivo = e.target.files?.[0];
+                  if (arquivo) selecionarFotoConclusao(arquivo);
+                }}
+                className="block w-full text-xs text-neutral-500"
+              />
+
+              <button
+                className="btn-primary w-full"
+                disabled={enviandoConclusao}
+                onClick={confirmarConclusao}
+              >
+                {enviandoConclusao ? "Salvando..." : "Confirmar conclusao"}
               </button>
             </div>
           </div>
