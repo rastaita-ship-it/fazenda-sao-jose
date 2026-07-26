@@ -3,7 +3,16 @@
 import { useState } from "react";
 import Header from "@/components/layout/Header";
 
-const PALAVRAS_RAPIDAS = ["Castracao", "Fungo/ferrugem", "Bicheira", "Mastite", "Verminose", "Cio", "Poda", "Vacinacao"];
+const PALAVRAS_RAPIDAS = [
+  { label: "Castra\u00e7\u00e3o", pergunta: "Qual a melhor epoca e cuidados para castracao de bezerros?" },
+  { label: "Fungo/ferrugem", pergunta: "Como identificar e tratar a ferrugem do cafeeiro?" },
+  { label: "Bicheira", pergunta: "Como tratar e prevenir bicheira em animais?" },
+  { label: "Mastite", pergunta: "Como identificar e tratar mastite em vacas leiteiras?" },
+  { label: "Verminose", pergunta: "Qual o melhor protocolo de vermifugacao para o rebanho?" },
+  { label: "Cio", pergunta: "Como identificar o cio em vacas para inseminacao?" },
+  { label: "Poda", pergunta: "Qual a melhor epoca e tecnica de poda do cafeeiro?" },
+  { label: "Vacina\u00e7\u00e3o", pergunta: "Qual o calendario de vacinacao recomendado para gado de corte?" },
+];
 
 export default function MentorPage() {
   const [pergunta, setPergunta] = useState("");
@@ -18,14 +27,16 @@ export default function MentorPage() {
     setPreviewUrl(URL.createObjectURL(arquivo));
   }
 
-  async function perguntar() {
-    if (!pergunta.trim()) return;
+  async function perguntar(textoForcado?: string) {
+    const textoFinal = textoForcado ?? pergunta;
+    if (!textoFinal.trim()) return;
+    setPergunta(textoFinal);
     setEnviando(true);
     setErro("");
     setResposta("");
 
     const formData = new FormData();
-    formData.append("pergunta", pergunta.trim());
+    formData.append("pergunta", textoFinal.trim());
     if (foto) formData.append("foto", foto);
 
     try {
@@ -36,6 +47,8 @@ export default function MentorPage() {
         return;
       }
       setResposta(dados.resposta);
+    } catch {
+      setErro("Nao foi possivel conectar com a IA. Verifique sua internet.");
     } finally {
       setEnviando(false);
     }
@@ -68,13 +81,14 @@ export default function MentorPage() {
             className="block w-full text-xs text-neutral-500"
           />
           <div className="flex flex-wrap gap-2">
-            {PALAVRAS_RAPIDAS.map((p) => (
+            {PALAVRAS_RAPIDAS.map((item) => (
               <button
-                key={p}
-                onClick={() => setPergunta(p)}
-                className="rounded-full border border-neutral-300 px-3 py-1.5 text-xs font-medium text-neutral-500 dark:border-neutral-700"
+                key={item.label}
+                disabled={enviando}
+                onClick={() => perguntar(item.pergunta)}
+                className="rounded-full border border-neutral-300 px-3 py-1.5 text-xs font-medium text-neutral-500 disabled:opacity-40 dark:border-neutral-700"
               >
-                {p}
+                {item.label}
               </button>
             ))}
           </div>
@@ -95,7 +109,7 @@ export default function MentorPage() {
             <button
               className="btn-primary"
               disabled={enviando || !pergunta.trim()}
-              onClick={perguntar}
+              onClick={() => perguntar()}
             >
               {enviando ? "Pensando..." : "Perguntar"}
             </button>
