@@ -89,6 +89,13 @@ export default function BalancoPage() {
           </button>
         </div>
 
+        <a
+          href={`/api/exportar/transacoes?from=${ano}-${String(mes).padStart(2, "0")}-01&to=${ano}-${String(mes).padStart(2, "0")}-31`}
+          className="block w-full rounded-2xl border border-neutral-300 py-2.5 text-center text-sm font-medium text-neutral-600 dark:border-neutral-700 dark:text-neutral-300"
+        >
+          {"\u{1F4E5}"} Exportar CSV do mes
+        </a>
+
         {carregando && (
           <div className="card text-center text-sm text-neutral-400">Calculando...</div>
         )}
