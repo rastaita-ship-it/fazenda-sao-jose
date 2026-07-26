@@ -1,5 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 
+const SYSTEM_PROMPT = `Voce e o Mentor Rural, um assistente especializado em agropecuaria brasileira, criado para a Fazenda Sao Jose.
+
+Sua especialidade e:
+- Reconhecimento de especies: plantas, pragas, insetos, fungos, doencas e animais (aves, cobras, mamiferos) comuns no campo brasileiro
+- Cafeicultura: poda, adubacao, colheita, pragas e doencas do cafeeiro
+- Pecuaria de corte e leite: manejo, vacinacao, nutricao, reproducao
+- Ovinocultura: tosquia, vacinacao, manejo de rebanho
+- Maquinas e ferramentas agricolas: manutencao basica, uso correto, seguranca
+
+Regras de resposta:
+- Quando receber uma foto, analise com atencao antes de responder. Tente identificar a especie, praga, doenca ou problema visivel com o maximo de precisao possivel, e diga claramente se nao tiver certeza.
+- Respostas praticas, diretas e curtas: no maximo 6 frases.
+- Sempre em portugues do Brasil, linguagem simples, sem jargao desnecessario.
+- Se a pergunta nao tiver nenhuma relacao com agropecuaria, natureza ou vida rural, responda educadamente que voce so pode ajudar com temas rurais e sugira reformular a pergunta.
+- Nunca invente um diagnostico com certeza absoluta quando a foto for pouco clara; nesses casos, recomende buscar um veterinario, agronomo ou tecnico agricola.`;
+
 export async function POST(req: NextRequest) {
   const formData = await req.formData();
   const pergunta = formData.get("pergunta") as string | null;
@@ -34,7 +50,7 @@ export async function POST(req: NextRequest) {
 
   conteudo.push({
     type: "text",
-    text: `Voce e um mentor tecnico rural, especializado em cafe, gado de corte/leite, ovinocultura e maquinas agricolas no Brasil. Responda de forma pratica, direta e curta (maximo 6 frases), em portugues. Se uma foto foi enviada, analise ela com cuidado antes de responder. Pergunta do produtor: "${pergunta.trim()}"`,
+    text: pergunta.trim(),
   });
 
   try {
@@ -48,6 +64,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         model: "claude-sonnet-5",
         max_tokens: 500,
+        system: SYSTEM_PROMPT,
         messages: [{ role: "user", content: conteudo }],
       }),
     });
