@@ -4,14 +4,38 @@ import { useState } from "react";
 import Header from "@/components/layout/Header";
 
 const PALAVRAS_RAPIDAS = [
-  { label: "Castra\u00e7\u00e3o", pergunta: "Qual a melhor epoca e cuidados para castracao de bezerros?" },
-  { label: "Fungo/ferrugem", pergunta: "Como identificar e tratar a ferrugem do cafeeiro?" },
-  { label: "Bicheira", pergunta: "Como tratar e prevenir bicheira em animais?" },
-  { label: "Mastite", pergunta: "Como identificar e tratar mastite em vacas leiteiras?" },
-  { label: "Verminose", pergunta: "Qual o melhor protocolo de vermifugacao para o rebanho?" },
-  { label: "Cio", pergunta: "Como identificar o cio em vacas para inseminacao?" },
-  { label: "Poda", pergunta: "Qual a melhor epoca e tecnica de poda do cafeeiro?" },
-  { label: "Vacina\u00e7\u00e3o", pergunta: "Qual o calendario de vacinacao recomendado para gado de corte?" },
+  {
+    label: "Castra\u00e7\u00e3o",
+    pergunta: "Qual a melhor \u00e9poca e cuidados para castra\u00e7\u00e3o de bezerros?",
+  },
+  {
+    label: "Fungo/ferrugem",
+    pergunta: "Como identificar e tratar a ferrugem do cafeeiro?",
+  },
+  {
+    label: "Bicheira",
+    pergunta: "Como tratar e prevenir bicheira em animais?",
+  },
+  {
+    label: "Mastite",
+    pergunta: "Como identificar e tratar mastite em vacas leiteiras?",
+  },
+  {
+    label: "Verminose",
+    pergunta: "Qual o melhor protocolo de vermifuga\u00e7\u00e3o para o rebanho?",
+  },
+  {
+    label: "Cio",
+    pergunta: "Quais os sinais fisicos que indicam que uma vaca esta no periodo fertil do ciclo reprodutivo?",
+  },
+  {
+    label: "Poda",
+    pergunta: "Qual a melhor \u00e9poca e t\u00e9cnica de poda do cafeeiro?",
+  },
+  {
+    label: "Vacina\u00e7\u00e3o",
+    pergunta: "Qual o calend\u00e1rio de vacina\u00e7\u00e3o recomendado para gado de corte?",
+  },
 ];
 
 export default function MentorPage() {
