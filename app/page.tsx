@@ -6,6 +6,7 @@ import QuickAddButtons from "@/components/dashboard/QuickAddButtons";
 import SectorBreakdown from "@/components/dashboard/SectorBreakdown";
 import AvisoAtividadesHoje from "@/components/dashboard/AvisoAtividadesHoje";
 import AvisoDocumentosVencendo from "@/components/dashboard/AvisoDocumentosVencendo";
+import ResumoMetas from "@/components/dashboard/ResumoMetas";
 import { useAuth } from "@/components/auth/AuthContext";
 import { ResumoFinanceiro } from "@/lib/types";
 
@@ -123,6 +124,8 @@ function PaginaAdmin() {
             <SectorBreakdown resumo={resumo} onAtualizado={carregarResumo} />
           </>
         )}
+
+        <ResumoMetas />
 
         <a
           href="/mentor"
