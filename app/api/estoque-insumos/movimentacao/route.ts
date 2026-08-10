@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-estoque";
+import "@/lib/db-historico-precos";
 import { ehAdminLogado } from "@/lib/auth-helpers";
+import { enviarParaAdmins } from "@/lib/notificacoes";
 
 export async function GET(req: NextRequest) {
   if (!ehAdminLogado(req)) {
@@ -29,7 +31,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { insumo_id, tipo, quantidade, data, descricao, custo_total } = body;
+  const { insumo_id, tipo, quantidade, data, descricao, custo_total, fornecedor } = body;
 
   if (!insumo_id || !tipo || !quantidade || !data) {
     return NextResponse.json(
@@ -42,7 +44,7 @@ export async function POST(req: NextRequest) {
   }
 
   const insumo = db.prepare("SELECT * FROM estoque_insumos WHERE id = ?").get(insumo_id) as
-    | { quantidade_atual: number }
+    | { nome: string; quantidade_atual: number; quantidade_minima: number | null; unidade: string }
     | undefined;
   if (!insumo) {
     return NextResponse.json({ error: "insumo nao encontrado" }, { status: 404 });
@@ -56,19 +58,41 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const custoTotalNum = custo_total != null && custo_total !== "" ? Number(custo_total) : null;
+  const precoUnitario = custoTotalNum != null ? custoTotalNum / quantidadeNum : null;
+
   const transacao = db.transaction(() => {
     db.prepare(
-      "INSERT INTO movimentacoes_insumo (insumo_id, tipo, quantidade, data, descricao, custo_total) VALUES (?, ?, ?, ?, ?, ?)"
-    ).run(insumo_id, tipo, quantidadeNum, data, descricao ?? null, custo_total ?? null);
+      `INSERT INTO movimentacoes_insumo (insumo_id, tipo, quantidade, data, descricao, custo_total, fornecedor, preco_unitario)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(insumo_id, tipo, quantidadeNum, data, descricao ?? null, custoTotalNum, fornecedor ?? null, precoUnitario);
 
     const delta = tipo === "entrada" ? quantidadeNum : -quantidadeNum;
     db.prepare("UPDATE estoque_insumos SET quantidade_atual = quantidade_atual + ? WHERE id = ?").run(
       delta,
       insumo_id
     );
+
+    if (tipo === "entrada" && precoUnitario != null) {
+      db.prepare("UPDATE estoque_insumos SET custo_unitario = ? WHERE id = ?").run(precoUnitario, insumo_id);
+    }
   });
   transacao();
 
-  const atualizado = db.prepare("SELECT * FROM estoque_insumos WHERE id = ?").get(insumo_id);
+  const atualizado = db.prepare("SELECT * FROM estoque_insumos WHERE id = ?").get(insumo_id) as {
+    quantidade_atual: number;
+  };
+
+  const antesEstavaAcimaDoMinimo = insumo.quantidade_minima == null || insumo.quantidade_atual > insumo.quantidade_minima;
+  const agoraEstaNoOuAbaixoDoMinimo =
+    insumo.quantidade_minima != null && atualizado.quantidade_atual <= insumo.quantidade_minima;
+  if (tipo === "saida" && antesEstavaAcimaDoMinimo && agoraEstaNoOuAbaixoDoMinimo) {
+    enviarParaAdmins({
+      titulo: `Estoque baixo: ${insumo.nome}`,
+      corpo: `Restam ${atualizado.quantidade_atual} ${insumo.unidade} (minimo: ${insumo.quantidade_minima}).`,
+      url: "/estoque",
+    }).catch(() => {});
+  }
+
   return NextResponse.json(atualizado, { status: 201 });
 }

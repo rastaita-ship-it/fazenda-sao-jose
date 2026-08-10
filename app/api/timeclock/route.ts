@@ -2,7 +2,29 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-ponto";
 import "@/lib/db-ponto-geo";
+import "@/lib/db-ponto-foto";
 import { estaDentroDaFazenda, calcularDistanciaMetros, FAZENDA_COORDENADAS } from "@/lib/geo";
+import { pastaUpload } from "@/lib/uploads";
+import fs from "fs";
+import path from "path";
+
+const TAMANHO_MAXIMO_FOTO_BYTES = 4 * 1024 * 1024; // 4MB decodificado
+
+function salvarFotoSelfie(registroId: number, fotoBase64: string): string | null {
+  const match = /^data:image\/(jpeg|jpg|png|webp);base64,(.+)$/.exec(fotoBase64);
+  if (!match) return null;
+
+  const [, extensaoBruta, dadosBase64] = match;
+  const buffer = Buffer.from(dadosBase64, "base64");
+  if (buffer.length === 0 || buffer.length > TAMANHO_MAXIMO_FOTO_BYTES) return null;
+
+  const ext = extensaoBruta === "jpg" ? "jpeg" : extensaoBruta;
+  const pastaDestino = pastaUpload("ponto");
+  const nomeArquivo = `selfie-${registroId}-${Date.now()}.${ext}`;
+  fs.writeFileSync(path.join(pastaDestino, nomeArquivo), buffer);
+
+  return `/api/uploads/ponto/${nomeArquivo}`;
+}
 
 export interface RegistroPonto {
   id: number;
@@ -48,7 +70,7 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { funcionario_id, latitude, longitude, observacao } = body;
+  const { funcionario_id, latitude, longitude, observacao, foto_base64 } = body;
 
   if (!funcionario_id) {
     return NextResponse.json({ error: "funcionario_id é obrigatório." }, { status: 400 });
@@ -93,10 +115,16 @@ export async function POST(req: NextRequest) {
      VALUES (?, ?, datetime('now', 'localtime'), ?, ?, ?, 1)`
   );
   const result = stmt.run(funcionario_id, proximoTipo, observacao ?? null, latitude, longitude);
+  const registroId = Number(result.lastInsertRowid);
 
-  const novo = db
-    .prepare("SELECT * FROM registros_ponto WHERE id = ?")
-    .get(result.lastInsertRowid);
+  if (typeof foto_base64 === "string" && foto_base64.length > 0) {
+    const fotoUrl = salvarFotoSelfie(registroId, foto_base64);
+    if (fotoUrl) {
+      db.prepare("UPDATE registros_ponto SET foto_url = ? WHERE id = ?").run(fotoUrl, registroId);
+    }
+  }
+
+  const novo = db.prepare("SELECT * FROM registros_ponto WHERE id = ?").get(registroId);
 
   return NextResponse.json(novo, { status: 201 });
 }

@@ -22,6 +22,17 @@ export interface Transacao {
   status: StatusTransacao;
   criado_em: string;
   recibo_url: string | null;
+  talhao_id: number | null;
+}
+
+export interface Talhao {
+  id: number;
+  setor_id: number;
+  nome: string;
+  area_hectares: number | null;
+  observacao: string | null;
+  ativo: number;
+  criado_em: string;
 }
 
 export interface TransacaoComSetor extends Transacao {

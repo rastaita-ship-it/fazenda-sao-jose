@@ -3,6 +3,7 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ["better-sqlite3"],
     cpus: 1,
+    instrumentationHook: true,
   },
 };
 

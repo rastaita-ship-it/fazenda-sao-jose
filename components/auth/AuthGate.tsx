@@ -11,6 +11,13 @@ const PAGINAS_ADMIN = [
   "/patrimonio",
   "/estoque",
   "/setores",
+  "/talhoes",
+  "/animais",
+  "/documentos",
+  "/combustivel",
+  "/importar",
+  "/metas",
+  "/historico-precos",
   "/funcionarios",
 ];
 

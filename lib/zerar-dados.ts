@@ -9,6 +9,12 @@ import "./db-auth";
 import "./db-salario";
 import "./db-area";
 import "./db-custos";
+import "./db-talhoes";
+import "./db-animais";
+import "./db-documentos";
+import "./db-abastecimento";
+import "./db-metas";
+import "./db-notificacoes";
 
 const tabelas = [
   "transacoes",
@@ -22,6 +28,14 @@ const tabelas = [
   "movimentacoes_producao",
   "estoque_producao",
   "lancamentos_operacionais",
+  "talhoes",
+  "animais_pesagens",
+  "animais_vacinas",
+  "animais_reproducao",
+  "animais",
+  "documentos",
+  "abastecimentos",
+  "metas",
 ];
 
 for (const tabela of tabelas) {

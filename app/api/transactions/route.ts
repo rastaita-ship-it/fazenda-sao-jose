@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-custos";
+import { talhaoExiste } from "@/lib/db-talhoes";
 import { ehAdminLogado } from "@/lib/auth-helpers";
 import { TransacaoComSetor } from "@/lib/types";
 
@@ -57,7 +58,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { setor_id, tipo, descricao, valor, data, categoria, status, classificacao_custo } = body;
+  const { setor_id, tipo, descricao, valor, data, categoria, status, classificacao_custo, talhao_id } = body;
 
   if (!setor_id || !tipo || !descricao || valor == null || !data) {
     return NextResponse.json(
@@ -68,10 +69,13 @@ export async function POST(req: NextRequest) {
   if (!["receita", "despesa"].includes(tipo)) {
     return NextResponse.json({ error: "tipo invalido" }, { status: 400 });
   }
+  if (talhao_id != null && !talhaoExiste(Number(talhao_id))) {
+    return NextResponse.json({ error: "talhao invalido" }, { status: 400 });
+  }
 
   const stmt = db.prepare(`
-    INSERT INTO transacoes (setor_id, tipo, categoria, descricao, valor, data, status, classificacao_custo)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO transacoes (setor_id, tipo, categoria, descricao, valor, data, status, classificacao_custo, talhao_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   const result = stmt.run(
     setor_id,
@@ -81,7 +85,8 @@ export async function POST(req: NextRequest) {
     Number(valor),
     data,
     status ?? "pago",
-    tipo === "despesa" ? classificacao_custo ?? null : null
+    tipo === "despesa" ? classificacao_custo ?? null : null,
+    talhao_id ?? null
   );
 
   const novaTransacao = db

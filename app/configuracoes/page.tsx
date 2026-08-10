@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import Header from "@/components/layout/Header";
 import { useAuth } from "@/components/auth/AuthContext";
+import NotificacoesPush from "@/components/pwa/NotificacoesPush";
 
 export default function ConfiguracoesPage() {
   const usuario = useAuth();
@@ -25,6 +26,8 @@ export default function ConfiguracoesPage() {
             {usuario?.tipo === "chefe" ? "Administrador" : "Colaborador"}
           </p>
         </div>
+
+        <NotificacoesPush />
 
         {usuario?.tipo === "chefe" && (
           <a

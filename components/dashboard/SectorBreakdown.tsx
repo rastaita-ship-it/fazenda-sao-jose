@@ -124,9 +124,17 @@ export default function SectorBreakdown({
     <div className="card">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-base font-semibold">Desempenho por setor</h2>
-        <button onClick={abrirNovo} className="text-xs font-medium text-brand-600 dark:text-brand-400">
-          + Novo
-        </button>
+        <div className="flex items-center gap-3">
+          <a href="/animais" className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+            Animais →
+          </a>
+          <a href="/talhoes" className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+            Talhões →
+          </a>
+          <button onClick={abrirNovo} className="text-xs font-medium text-brand-600 dark:text-brand-400">
+            + Novo
+          </button>
+        </div>
       </div>
       <div className="space-y-3">
         {resumo.porSetor.map((s) => {

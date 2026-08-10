@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Header from "@/components/layout/Header";
+import { Talhao } from "@/lib/types";
 
 interface Produto {
   id: number;
@@ -36,6 +37,9 @@ export default function EstoqueProducaoPage() {
   const [tipoMovimento, setTipoMovimento] = useState<"entrada" | "saida">("entrada");
   const [quantidadeMovimento, setQuantidadeMovimento] = useState("");
   const [descricaoMovimento, setDescricaoMovimento] = useState("");
+  const [talhoesDoProduto, setTalhoesDoProduto] = useState<Talhao[]>([]);
+  const [talhaoMovimento, setTalhaoMovimento] = useState<number | "">("");
+  const idAbertoRef = useRef<number | null>(null);
   const [erroMovimento, setErroMovimento] = useState("");
   const [salvandoMovimento, setSalvandoMovimento] = useState(false);
 
@@ -77,12 +81,23 @@ export default function EstoqueProducaoPage() {
     }
   }
 
-  function abrirMovimento(id: number, tipo: "entrada" | "saida") {
-    setMovimentandoId(id);
+  function abrirMovimento(item: Produto, tipo: "entrada" | "saida") {
+    setMovimentandoId(item.id);
+    idAbertoRef.current = item.id;
     setTipoMovimento(tipo);
     setQuantidadeMovimento("");
     setDescricaoMovimento("");
+    setTalhaoMovimento("");
     setErroMovimento("");
+    if (item.setor_id) {
+      fetch(`/api/talhoes?setor_id=${item.setor_id}`)
+        .then((r) => r.json())
+        .then((dados) => {
+          if (idAbertoRef.current === item.id) setTalhoesDoProduto(dados);
+        });
+    } else {
+      setTalhoesDoProduto([]);
+    }
   }
 
   async function salvarMovimento() {
@@ -100,6 +115,7 @@ export default function EstoqueProducaoPage() {
           quantidade: Number(quantidadeMovimento.replace(",", ".")),
           data: hoje,
           descricao: descricaoMovimento.trim() || null,
+          talhao_id: talhaoMovimento || null,
         }),
       });
       const dados = await res.json();
@@ -148,13 +164,13 @@ export default function EstoqueProducaoPage() {
             </div>
             <div className="mt-2 grid grid-cols-2 gap-2">
               <button
-                onClick={() => abrirMovimento(item.id, "entrada")}
+                onClick={() => abrirMovimento(item, "entrada")}
                 className="rounded-xl border border-brand-600 py-2 text-sm font-medium text-brand-600 dark:text-brand-400"
               >
                 + Entrada
               </button>
               <button
-                onClick={() => abrirMovimento(item.id, "saida")}
+                onClick={() => abrirMovimento(item, "saida")}
                 className="rounded-xl border border-danger py-2 text-sm font-medium text-danger"
               >
                 - Saida
@@ -261,6 +277,20 @@ export default function EstoqueProducaoPage() {
                 value={descricaoMovimento}
                 onChange={(e) => setDescricaoMovimento(e.target.value)}
               />
+              {talhoesDoProduto.length > 0 && (
+                <select
+                  className="input-field"
+                  value={talhaoMovimento}
+                  onChange={(e) => setTalhaoMovimento(e.target.value ? Number(e.target.value) : "")}
+                >
+                  <option value="">Talhão (opcional)</option>
+                  {talhoesDoProduto.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.nome}
+                    </option>
+                  ))}
+                </select>
+              )}
               {erroMovimento && <p className="text-sm text-danger">{erroMovimento}</p>}
               <button
                 className={tipoMovimento === "entrada" ? "btn-primary w-full" : "btn-danger w-full"}

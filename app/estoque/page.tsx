@@ -71,6 +71,8 @@ export default function EstoquePage() {
   const [movQtd, setMovQtd] = useState("");
   const [movDesc, setMovDesc] = useState("");
   const [movPreco, setMovPreco] = useState("");
+  const [movCustoTotal, setMovCustoTotal] = useState("");
+  const [movFornecedor, setMovFornecedor] = useState("");
   const [movErro, setMovErro] = useState("");
   const [movSalvando, setMovSalvando] = useState(false);
 
@@ -147,6 +149,8 @@ export default function EstoquePage() {
     setMovQtd("");
     setMovDesc("");
     setMovPreco("");
+    setMovCustoTotal("");
+    setMovFornecedor("");
     setMovErro("");
   }
 
@@ -163,8 +167,13 @@ export default function EstoquePage() {
         data: hoje,
         descricao: movDesc.trim() || null,
       };
-      if (aba === "insumos") corpoBase.insumo_id = movId;
-      else {
+      if (aba === "insumos") {
+        corpoBase.insumo_id = movId;
+        if (movTipo === "entrada") {
+          if (movCustoTotal) corpoBase.custo_total = Number(movCustoTotal.replace(",", "."));
+          if (movFornecedor.trim()) corpoBase.fornecedor = movFornecedor.trim();
+        }
+      } else {
         corpoBase.produto_id = movId;
         if (movTipo === "saida" && movPreco) corpoBase.preco_unitario = Number(movPreco.replace(",", "."));
       }
@@ -217,6 +226,22 @@ export default function EstoquePage() {
           + Adicionar {aba === "insumos" ? "insumo" : "produto"}
         </button>
 
+        <a
+          href="/importar"
+          className="block w-full rounded-xl border border-neutral-300 py-2.5 text-center text-sm font-medium text-neutral-600 dark:border-neutral-700 dark:text-neutral-300"
+        >
+          📥 Importar planilha CSV
+        </a>
+
+        {aba === "insumos" && (
+          <a
+            href="/historico-precos"
+            className="block w-full rounded-xl border border-neutral-300 py-2.5 text-center text-sm font-medium text-neutral-600 dark:border-neutral-700 dark:text-neutral-300"
+          >
+            💲 Histórico de preços por fornecedor
+          </a>
+        )}
+
         {carregando && <div className="card text-center text-sm text-neutral-400">Carregando...</div>}
 
         {!carregando && aba === "insumos" &&
@@ -256,6 +281,12 @@ export default function EstoquePage() {
                     - Saida
                   </button>
                 </div>
+                <a
+                  href={`/historico-precos?insumo_id=${item.id}`}
+                  className="mt-2 block text-center text-xs font-medium text-neutral-500 dark:text-neutral-400"
+                >
+                  Ver histórico de preços →
+                </a>
               </div>
             );
           })}
@@ -408,6 +439,23 @@ export default function EstoquePage() {
                   value={movPreco}
                   onChange={(e) => setMovPreco(e.target.value)}
                 />
+              )}
+              {aba === "insumos" && movTipo === "entrada" && (
+                <>
+                  <input
+                    className="input-field"
+                    inputMode="decimal"
+                    placeholder="Custo total da compra (R$, opcional)"
+                    value={movCustoTotal}
+                    onChange={(e) => setMovCustoTotal(e.target.value)}
+                  />
+                  <input
+                    className="input-field"
+                    placeholder="Fornecedor (opcional)"
+                    value={movFornecedor}
+                    onChange={(e) => setMovFornecedor(e.target.value)}
+                  />
+                </>
               )}
               <input
                 className="input-field"

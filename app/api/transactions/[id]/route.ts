@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-custos";
+import { talhaoExiste } from "@/lib/db-talhoes";
 import { ehAdminLogado } from "@/lib/auth-helpers";
 
 export async function DELETE(
@@ -51,6 +52,7 @@ export async function PATCH(
     "data",
     "status",
     "classificacao_custo",
+    "talhao_id",
   ];
   for (const campo of permitidos) {
     if (campo in body) {
@@ -61,6 +63,9 @@ export async function PATCH(
 
   if (campos.length === 0) {
     return NextResponse.json({ error: "Nenhum campo para atualizar." }, { status: 400 });
+  }
+  if (body.talhao_id != null && !talhaoExiste(Number(body.talhao_id))) {
+    return NextResponse.json({ error: "talhao invalido" }, { status: 400 });
   }
 
   valores.push(id);

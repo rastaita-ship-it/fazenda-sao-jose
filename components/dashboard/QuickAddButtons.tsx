@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Setor, TipoTransacao } from "@/lib/types";
+import { Setor, Talhao, TipoTransacao } from "@/lib/types";
 
 const CATEGORIAS_FIXO = [
   "Depreciacao de maquinas e benfeitorias",
@@ -32,6 +32,8 @@ export default function QuickAddButtons({ onSaved }: { onSaved: () => void }) {
   const [salvando, setSalvando] = useState(false);
 
   const [setorId, setSetorId] = useState<number | "">("");
+  const [talhoes, setTalhoes] = useState<Talhao[]>([]);
+  const [talhaoId, setTalhaoId] = useState<number | "">("");
   const [descricao, setDescricao] = useState("");
   const [valor, setValor] = useState("");
   const [data, setData] = useState(() => new Date().toISOString().slice(0, 10));
@@ -49,6 +51,23 @@ export default function QuickAddButtons({ onSaved }: { onSaved: () => void }) {
     }
   }, [aberto, setores.length]);
 
+  useEffect(() => {
+    setTalhaoId("");
+    if (!setorId) {
+      setTalhoes([]);
+      return;
+    }
+    let cancelado = false;
+    fetch(`/api/talhoes?setor_id=${setorId}`)
+      .then((r) => r.json())
+      .then((dados) => {
+        if (!cancelado) setTalhoes(dados);
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, [setorId]);
+
   function abrir(tipoSelecionado: TipoTransacao) {
     setTipo(tipoSelecionado);
     setAberto(true);
@@ -61,6 +80,7 @@ export default function QuickAddButtons({ onSaved }: { onSaved: () => void }) {
     setClassificacaoCusto("");
     setCategoria("");
     setCategoriaCustom("");
+    setTalhaoId("");
   }
 
   async function salvar() {
@@ -80,6 +100,7 @@ export default function QuickAddButtons({ onSaved }: { onSaved: () => void }) {
           status,
           categoria: categoriaFinal || null,
           classificacao_custo: tipo === "despesa" ? classificacaoCusto || null : null,
+          talhao_id: talhaoId || null,
         }),
       });
       fechar();
@@ -141,6 +162,26 @@ export default function QuickAddButtons({ onSaved }: { onSaved: () => void }) {
                   ))}
                 </select>
               </div>
+
+              {talhoes.length > 0 && (
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-neutral-500">
+                    Talhão (opcional)
+                  </label>
+                  <select
+                    className="input-field"
+                    value={talhaoId}
+                    onChange={(e) => setTalhaoId(e.target.value ? Number(e.target.value) : "")}
+                  >
+                    <option value="">Setor inteiro</option>
+                    {talhoes.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.nome}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div>
                 <label className="mb-1 block text-xs font-medium text-neutral-500">

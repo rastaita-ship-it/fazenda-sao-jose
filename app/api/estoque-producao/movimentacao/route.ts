@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-estoque";
 import "@/lib/db-custos";
+import { talhaoExiste } from "@/lib/db-talhoes";
 import { ehAdminLogado } from "@/lib/auth-helpers";
 
 export async function GET(req: NextRequest) {
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { produto_id, tipo, quantidade, data, descricao, preco_unitario } = body;
+  const { produto_id, tipo, quantidade, data, descricao, preco_unitario, talhao_id } = body;
 
   if (!produto_id || !tipo || !quantidade || !data) {
     return NextResponse.json(
@@ -58,15 +59,18 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
+  if (talhao_id != null && !talhaoExiste(Number(talhao_id))) {
+    return NextResponse.json({ error: "talhao invalido" }, { status: 400 });
+  }
 
   let transacaoId: number | null = null;
 
   const transacaoDb = db.transaction(() => {
     const movResult = db
       .prepare(
-        "INSERT INTO movimentacoes_producao (produto_id, tipo, quantidade, data, descricao) VALUES (?, ?, ?, ?, ?)"
+        "INSERT INTO movimentacoes_producao (produto_id, tipo, quantidade, data, descricao, talhao_id) VALUES (?, ?, ?, ?, ?, ?)"
       )
-      .run(produto_id, tipo, quantidadeNum, data, descricao ?? null);
+      .run(produto_id, tipo, quantidadeNum, data, descricao ?? null, talhao_id ?? null);
 
     const delta = tipo === "entrada" ? quantidadeNum : -quantidadeNum;
     db.prepare("UPDATE estoque_producao SET quantidade_atual = quantidade_atual + ? WHERE id = ?").run(

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Header from "@/components/layout/Header";
-import { TransacaoComSetor, Setor } from "@/lib/types";
+import { TransacaoComSetor, Setor, Talhao } from "@/lib/types";
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -23,12 +23,15 @@ export default function FluxoCaixaPage() {
   const [salvandoEdicao, setSalvandoEdicao] = useState(false);
 
   const [editSetorId, setEditSetorId] = useState<number | "">("");
+  const [talhoesDoSetor, setTalhoesDoSetor] = useState<Talhao[]>([]);
+  const [editTalhaoId, setEditTalhaoId] = useState<number | "">("");
   const [editDescricao, setEditDescricao] = useState("");
   const [editValor, setEditValor] = useState("");
   const [editData, setEditData] = useState("");
   const [editStatus, setEditStatus] = useState("pago");
   const [editRecibo, setEditRecibo] = useState<string | null>(null);
   const [enviandoRecibo, setEnviandoRecibo] = useState(false);
+  const [editErro, setEditErro] = useState("");
 
   function carregar() {
     setCarregando(true);
@@ -42,6 +45,22 @@ export default function FluxoCaixaPage() {
     carregar();
     fetch("/api/sectors").then((r) => r.json()).then(setSetores);
   }, []);
+
+  useEffect(() => {
+    if (!editSetorId) {
+      setTalhoesDoSetor([]);
+      return;
+    }
+    let cancelado = false;
+    fetch(`/api/talhoes?setor_id=${editSetorId}`)
+      .then((r) => r.json())
+      .then((dados) => {
+        if (!cancelado) setTalhoesDoSetor(dados);
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, [editSetorId]);
 
   async function excluir(id: number, descricao: string) {
     const confirmar = window.confirm(
@@ -61,11 +80,13 @@ export default function FluxoCaixaPage() {
   function abrirEdicao(t: TransacaoComSetor) {
     setEditandoId(t.id);
     setEditSetorId(t.setor_id);
+    setEditTalhaoId(t.talhao_id ?? "");
     setEditDescricao(t.descricao);
     setEditValor(String(t.valor));
     setEditData(t.data);
     setEditStatus(t.status);
     setEditRecibo(t.recibo_url);
+    setEditErro("");
   }
 
   async function enviarRecibo(arquivo: File) {
@@ -89,18 +110,25 @@ export default function FluxoCaixaPage() {
   async function salvarEdicao() {
     if (!editandoId) return;
     setSalvandoEdicao(true);
+    setEditErro("");
     try {
-      await fetch(`/api/transactions/${editandoId}`, {
+      const res = await fetch(`/api/transactions/${editandoId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           setor_id: editSetorId,
+          talhao_id: editTalhaoId || null,
           descricao: editDescricao,
           valor: Number(String(editValor).replace(",", ".")),
           data: editData,
           status: editStatus,
         }),
       });
+      if (!res.ok) {
+        const dados = await res.json();
+        setEditErro(dados.error ?? "Erro ao salvar alteracoes.");
+        return;
+      }
       setEditandoId(null);
       carregar();
     } finally {
@@ -202,7 +230,10 @@ export default function FluxoCaixaPage() {
                 <select
                   className="input-field"
                   value={editSetorId}
-                  onChange={(e) => setEditSetorId(Number(e.target.value))}
+                  onChange={(e) => {
+                    setEditSetorId(Number(e.target.value));
+                    setEditTalhaoId("");
+                  }}
                 >
                   {setores.map((s) => (
                     <option key={s.id} value={s.id}>
@@ -211,6 +242,26 @@ export default function FluxoCaixaPage() {
                   ))}
                 </select>
               </div>
+
+              {talhoesDoSetor.length > 0 && (
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-neutral-500">
+                    Talhão (opcional)
+                  </label>
+                  <select
+                    className="input-field"
+                    value={editTalhaoId}
+                    onChange={(e) => setEditTalhaoId(e.target.value ? Number(e.target.value) : "")}
+                  >
+                    <option value="">Setor inteiro</option>
+                    {talhoesDoSetor.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.nome}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div>
                 <label className="mb-1 block text-xs font-medium text-neutral-500">
@@ -295,6 +346,8 @@ export default function FluxoCaixaPage() {
                 />
                 {enviandoRecibo && <p className="mt-1 text-xs text-neutral-400">Enviando...</p>}
               </div>
+
+              {editErro && <p className="text-sm text-danger">{editErro}</p>}
 
               <button
                 className="btn-primary w-full"

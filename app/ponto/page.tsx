@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Header from "@/components/layout/Header";
 import AvisoAtividadesHoje from "@/components/dashboard/AvisoAtividadesHoje";
 import { useAuth } from "@/components/auth/AuthContext";
@@ -17,6 +17,34 @@ interface RegistroPonto {
   tipo: "entrada" | "saida";
   data_hora: string;
   funcionario_nome: string;
+  foto_url: string | null;
+}
+
+function comprimirFoto(arquivo: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const leitor = new FileReader();
+    leitor.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const LARGURA_MAXIMA = 480;
+        const escala = Math.min(1, LARGURA_MAXIMA / img.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width * escala;
+        canvas.height = img.height * escala;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Nao foi possivel processar a foto."));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.6));
+      };
+      img.onerror = () => reject(new Error("Nao foi possivel carregar a foto."));
+      img.src = leitor.result as string;
+    };
+    leitor.onerror = () => reject(new Error("Nao foi possivel ler a foto."));
+    leitor.readAsDataURL(arquivo);
+  });
 }
 
 function formatarHora(dataHora: string) {
@@ -54,6 +82,8 @@ export default function PontoPage() {
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
   const [registrosHoje, setRegistrosHoje] = useState<RegistroPonto[]>([]);
   const [batendoId, setBatendoId] = useState<number | null>(null);
+  const [funcionarioPendente, setFuncionarioPendente] = useState<number | null>(null);
+  const inputFotoRef = useRef<HTMLInputElement>(null);
   const [mostrarForm, setMostrarForm] = useState(false);
   const [nomeNovo, setNomeNovo] = useState("");
   const [funcaoNova, setFuncaoNova] = useState("");
@@ -85,10 +115,15 @@ export default function PontoPage() {
 
   const CHAVE_FILA_OFFLINE = "fila_ponto_offline";
 
-  function salvarNaFilaOffline(item: Record<string, unknown>) {
-    const filaAtual = JSON.parse(localStorage.getItem(CHAVE_FILA_OFFLINE) || "[]");
-    filaAtual.push(item);
-    localStorage.setItem(CHAVE_FILA_OFFLINE, JSON.stringify(filaAtual));
+  function salvarNaFilaOffline(item: Record<string, unknown>): boolean {
+    try {
+      const filaAtual = JSON.parse(localStorage.getItem(CHAVE_FILA_OFFLINE) || "[]");
+      filaAtual.push(item);
+      localStorage.setItem(CHAVE_FILA_OFFLINE, JSON.stringify(filaAtual));
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async function sincronizarFilaOffline() {
@@ -122,16 +157,31 @@ export default function PontoPage() {
     return () => window.removeEventListener("online", sincronizarFilaOffline);
   }, []);
 
-  async function bater(funcionarioId: number) {
-    setBatendoId(funcionarioId);
+  function iniciarBater(funcionarioId: number) {
     setMensagem("");
     setMensagemErro("");
+    setFuncionarioPendente(funcionarioId);
+    inputFotoRef.current?.click();
+  }
+
+  function aoSelecionarFoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const arquivo = e.target.files?.[0];
+    e.target.value = "";
+    if (!arquivo || funcionarioPendente == null) return;
+    continuarBater(funcionarioPendente, arquivo);
+    setFuncionarioPendente(null);
+  }
+
+  async function continuarBater(funcionarioId: number, foto: File) {
+    setBatendoId(funcionarioId);
     try {
+      const fotoBase64 = await comprimirFoto(foto);
       const localizacao = await obterLocalizacao();
       const corpo = {
         funcionario_id: funcionarioId,
         latitude: localizacao.latitude,
         longitude: localizacao.longitude,
+        foto_base64: fotoBase64,
       };
 
       try {
@@ -155,12 +205,18 @@ export default function PontoPage() {
         carregarRegistrosHoje();
         setTimeout(() => setMensagem(""), 4000);
       } catch {
-        salvarNaFilaOffline(corpo);
-        setMensagem("Sem sinal agora. Ponto salvo no celular e sera enviado quando a internet voltar.");
-        setTimeout(() => setMensagem(""), 6000);
+        const salvo = salvarNaFilaOffline(corpo);
+        if (salvo) {
+          setMensagem("Sem sinal agora. Ponto salvo no celular e sera enviado quando a internet voltar.");
+          setTimeout(() => setMensagem(""), 6000);
+        } else {
+          setMensagemErro(
+            "Sem sinal e sem espaco de armazenamento neste celular para guardar o ponto. Tente novamente com internet."
+          );
+        }
       }
     } catch (err) {
-      setMensagemErro(err instanceof Error ? err.message : "Erro ao obter localizacao.");
+      setMensagemErro(err instanceof Error ? err.message : "Erro ao registrar o ponto.");
     } finally {
       setBatendoId(null);
     }
@@ -199,6 +255,14 @@ export default function PontoPage() {
   return (
     <>
       <Header titulo="Ponto Eletronico" subtitulo="Registro de entrada e saida" />
+      <input
+        ref={inputFotoRef}
+        type="file"
+        accept="image/*"
+        capture="user"
+        className="hidden"
+        onChange={aoSelecionarFoto}
+      />
       <div className="space-y-3 p-4">
         <AvisoAtividadesHoje />
         {mensagem && (
@@ -237,17 +301,22 @@ export default function PontoPage() {
                   <p className="text-xs text-neutral-400">
                     Ultimo registro hoje: {ultimo.tipo === "entrada" ? "Entrada" : "Saida"} as{" "}
                     {formatarHora(ultimo.data_hora)}
+                    {ultimo.foto_url && (
+                      <a href={ultimo.foto_url} target="_blank" rel="noreferrer" className="ml-1">
+                        📷
+                      </a>
+                    )}
                   </p>
                 )}
               </div>
               <button
-                onClick={() => bater(f.id)}
+                onClick={() => iniciarBater(f.id)}
                 disabled={batendoId === f.id}
                 className={proximaAcao === "entrada" ? "btn-primary" : "btn-danger"}
                 style={{ minWidth: "110px" }}
               >
                 {batendoId === f.id
-                  ? "Localizando..."
+                  ? "Enviando..."
                   : proximaAcao === "entrada"
                   ? "Bater entrada"
                   : "Bater saida"}

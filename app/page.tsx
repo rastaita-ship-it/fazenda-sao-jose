@@ -5,6 +5,7 @@ import SummaryCards from "@/components/dashboard/SummaryCards";
 import QuickAddButtons from "@/components/dashboard/QuickAddButtons";
 import SectorBreakdown from "@/components/dashboard/SectorBreakdown";
 import AvisoAtividadesHoje from "@/components/dashboard/AvisoAtividadesHoje";
+import AvisoDocumentosVencendo from "@/components/dashboard/AvisoDocumentosVencendo";
 import { useAuth } from "@/components/auth/AuthContext";
 import { ResumoFinanceiro } from "@/lib/types";
 
@@ -107,6 +108,8 @@ function PaginaAdmin() {
             <span className="text-xs font-medium">Cotacao</span>
           </a>
         </div>
+
+        <AvisoDocumentosVencendo />
 
         <QuickAddButtons onSaved={carregarResumo} />
 

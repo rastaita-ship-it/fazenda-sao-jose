@@ -45,3 +45,41 @@ self.addEventListener("fetch", (event) => {
     })
   );
 });
+
+self.addEventListener("push", (event) => {
+  let dados = { titulo: "Fazenda Sao Jose", corpo: "Voce tem um novo aviso.", url: "/" };
+  if (event.data) {
+    try {
+      dados = { ...dados, ...event.data.json() };
+    } catch (erro) {
+      dados.corpo = event.data.text();
+    }
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(dados.titulo, {
+      body: dados.corpo,
+      icon: "/logo.png",
+      badge: "/logo.png",
+      data: { url: dados.url || "/" },
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || "/";
+
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((listaClientes) => {
+      for (const cliente of listaClientes) {
+        if (cliente.url.includes(url) && "focus" in cliente) {
+          return cliente.focus();
+        }
+      }
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(url);
+      }
+    })
+  );
+});

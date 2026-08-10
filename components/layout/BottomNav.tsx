@@ -13,6 +13,8 @@ const ITENS_TODOS = [
   { href: "/manejo", label: "Manejo", icon: "\u{1F4C5}", admin: false },
   { href: "/patrimonio", label: "Patrimonio", icon: "\u{1F69C}", admin: true },
   { href: "/estoque", label: "Estoque", icon: "\u{1F4E6}", admin: true },
+  { href: "/documentos", label: "Documentos", icon: "\u{1F4C4}", admin: true },
+  { href: "/metas", label: "Metas", icon: "\u{1F3AF}", admin: true },
   { href: "/balanco", label: "Balanco", icon: "\u{2696}\u{FE0F}", admin: true },
   { href: "/relatorios", label: "Relatorios", icon: "\u{1F4CA}", admin: true },
   { href: "/ferramentas", label: "Ferramentas", icon: "\u{1F527}", admin: false },

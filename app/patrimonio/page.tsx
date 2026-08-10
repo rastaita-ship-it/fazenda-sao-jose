@@ -284,6 +284,20 @@ export default function PatrimonioPage() {
           + Adicionar item
         </button>
 
+        <a
+          href="/combustivel"
+          className="block w-full rounded-xl border border-neutral-300 py-2.5 text-center text-sm font-medium text-neutral-600 dark:border-neutral-700 dark:text-neutral-300"
+        >
+          ⛽ Ver consumo de combustível
+        </a>
+
+        <a
+          href="/importar"
+          className="block w-full rounded-xl border border-neutral-300 py-2.5 text-center text-sm font-medium text-neutral-600 dark:border-neutral-700 dark:text-neutral-300"
+        >
+          📥 Importar planilha CSV
+        </a>
+
         {carregando && (
           <div className="card text-center text-sm text-neutral-400">Carregando...</div>
         )}

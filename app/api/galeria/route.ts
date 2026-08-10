@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-galeria";
-import { pastaUpload } from "@/lib/uploads";
+import { pastaUpload, caminhoDeUploadSeguro } from "@/lib/uploads";
+import { estaLogado } from "@/lib/auth-helpers";
 import fs from "fs";
 import path from "path";
 
@@ -27,6 +28,10 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  if (!estaLogado(req)) {
+    return NextResponse.json({ error: "Precisa estar logado." }, { status: 401 });
+  }
+
   const formData = await req.formData();
   const arquivo = formData.get("arquivo") as File | null;
   const categoria = formData.get("categoria") as string | null;
@@ -45,8 +50,12 @@ export async function POST(req: NextRequest) {
 
   const pastaDestino = pastaUpload("galeria");
   const nomeArquivo = `registro-${Date.now()}${ext}`;
+  const caminhoCompleto = caminhoDeUploadSeguro(pastaDestino, nomeArquivo);
+  if (!caminhoCompleto) {
+    return NextResponse.json({ error: "caminho invalido" }, { status: 400 });
+  }
   const bytes = await arquivo.arrayBuffer();
-  fs.writeFileSync(path.join(pastaDestino, nomeArquivo), Buffer.from(bytes));
+  fs.writeFileSync(caminhoCompleto, Buffer.from(bytes));
   const fotoUrl = `/api/uploads/galeria/${nomeArquivo}`;
 
   const result = db
