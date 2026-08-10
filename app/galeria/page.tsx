@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Header from "@/components/layout/Header";
 import { useAuth } from "@/components/auth/AuthContext";
 
@@ -135,7 +136,15 @@ export default function GaleriaPage() {
             const info = infoCategoria(r.categoria);
             return (
               <div key={r.id} className="card p-2">
-                <img src={r.foto_url} alt={r.categoria} className="mb-2 h-32 w-full rounded-xl object-cover" />
+                <div className="relative mb-2 h-32 w-full overflow-hidden rounded-xl">
+                  <Image
+                    src={r.foto_url}
+                    alt={r.categoria}
+                    fill
+                    sizes="(max-width: 448px) 50vw, 224px"
+                    className="object-cover"
+                  />
+                </div>
                 <p className="text-xs font-semibold">
                   {info.icone} {info.rotulo}
                 </p>

@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import "@/lib/db-custos";
 import { talhaoExiste } from "@/lib/db-talhoes";
 import { ehAdminLogado } from "@/lib/auth-helpers";
+import { lerCorpoJson } from "@/lib/api";
 import { TransacaoComSetor } from "@/lib/types";
 
 export async function GET(req: NextRequest) {
@@ -57,8 +58,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Apenas administradores." }, { status: 403 });
   }
 
-  const body = await req.json();
-  const { setor_id, tipo, descricao, valor, data, categoria, status, classificacao_custo, talhao_id } = body;
+  const resultado = await lerCorpoJson<{
+    setor_id?: number;
+    tipo?: string;
+    descricao?: string;
+    valor?: number;
+    data?: string;
+    categoria?: string;
+    status?: string;
+    classificacao_custo?: string;
+    talhao_id?: number;
+  }>(req);
+  if (!resultado.ok) return resultado.resposta;
+  const { setor_id, tipo, descricao, valor, data, categoria, status, classificacao_custo, talhao_id } = resultado.body;
 
   if (!setor_id || !tipo || !descricao || valor == null || !data) {
     return NextResponse.json(

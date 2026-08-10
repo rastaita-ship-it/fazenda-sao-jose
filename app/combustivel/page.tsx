@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Header from "@/components/layout/Header";
+import { useToast } from "@/components/ui/ToastContext";
 
 interface Maquina {
   id: number;
@@ -37,6 +38,7 @@ function unidadeDaMaquina(tipo: string) {
 }
 
 export default function CombustivelPage() {
+  const toast = useToast();
   const [maquinas, setMaquinas] = useState<Maquina[]>([]);
   const [carregandoMaquinas, setCarregandoMaquinas] = useState(true);
   const [maquinaId, setMaquinaId] = useState<number | null>(null);
@@ -140,8 +142,16 @@ export default function CombustivelPage() {
   async function excluir(id: number) {
     if (!maquinaId) return;
     if (!window.confirm("Excluir este abastecimento? Se ele gerou uma despesa no fluxo de caixa, ela tambem sera removida.")) return;
-    await fetch(`/api/abastecimentos/${id}`, { method: "DELETE" });
-    carregarHistorico(maquinaId);
+    try {
+      const res = await fetch(`/api/abastecimentos/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        toast.erro("Nao foi possivel excluir o abastecimento. Tente novamente.");
+        return;
+      }
+      carregarHistorico(maquinaId);
+    } catch {
+      toast.erro("Nao foi possivel excluir o abastecimento. Verifique sua conexao.");
+    }
   }
 
   const maquinaAtual = maquinas.find((m) => m.id === maquinaId);

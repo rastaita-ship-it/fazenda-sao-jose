@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Header from "@/components/layout/Header";
+import { useToast } from "@/components/ui/ToastContext";
 
 interface Documento {
   id: number;
@@ -63,6 +64,7 @@ function situacaoVencimento(dataVencimento: string | null) {
 }
 
 export default function DocumentosPage() {
+  const toast = useToast();
   const [documentos, setDocumentos] = useState<Documento[]>([]);
   const [patrimonios, setPatrimonios] = useState<Patrimonio[]>([]);
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
@@ -183,7 +185,12 @@ export default function DocumentosPage() {
         const dados = await res.json();
         setArquivoUrl(dados.url);
         carregar();
+      } else {
+        const dados = await res.json().catch(() => ({}));
+        toast.erro(dados.error ?? "Nao foi possivel enviar o arquivo. Tente novamente.");
       }
+    } catch {
+      toast.erro("Nao foi possivel enviar o arquivo. Verifique sua conexao.");
     } finally {
       setEnviandoArquivo(false);
     }
@@ -192,9 +199,17 @@ export default function DocumentosPage() {
   async function excluir() {
     if (!editandoId) return;
     if (!window.confirm(`Excluir "${titulo}"? Essa acao nao pode ser desfeita.`)) return;
-    await fetch(`/api/documentos/${editandoId}`, { method: "DELETE" });
-    setModalAberto(false);
-    carregar();
+    try {
+      const res = await fetch(`/api/documentos/${editandoId}`, { method: "DELETE" });
+      if (!res.ok) {
+        toast.erro("Nao foi possivel excluir o documento. Tente novamente.");
+        return;
+      }
+      setModalAberto(false);
+      carregar();
+    } catch {
+      toast.erro("Nao foi possivel excluir o documento. Verifique sua conexao.");
+    }
   }
 
   const documentosFiltrados = useMemo(() => {

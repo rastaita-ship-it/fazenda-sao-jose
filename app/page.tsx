@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
 import SummaryCards from "@/components/dashboard/SummaryCards";
 import QuickAddButtons from "@/components/dashboard/QuickAddButtons";
 import SectorBreakdown from "@/components/dashboard/SectorBreakdown";
@@ -21,7 +22,14 @@ interface ClimaAtual {
 function CabecalhoLogo({ mostrarConfig }: { mostrarConfig?: boolean }) {
   return (
     <div className="sticky top-0 z-30 border-b border-neutral-200 bg-white/95 py-3 text-center backdrop-blur dark:border-neutral-800 dark:bg-neutral-950/95">
-      <img src="/logo.png" alt="Fazenda Sao Jose" className="mx-auto h-auto w-64" />
+      <Image
+        src="/logo.png"
+        alt="Fazenda Sao Jose"
+        width={450}
+        height={229}
+        priority
+        className="mx-auto h-auto w-64"
+      />
       {mostrarConfig && (
         <a
           href="/configuracoes"
@@ -35,17 +43,39 @@ function CabecalhoLogo({ mostrarConfig }: { mostrarConfig?: boolean }) {
   );
 }
 
+const CHAVE_CACHE_CLIMA = "clima_atual_cache";
+const VALIDADE_CACHE_CLIMA_MS = 30 * 60 * 1000;
+
 function useClimaAtual() {
   const [clima, setClima] = useState<ClimaAtual | null>(null);
   useEffect(() => {
+    try {
+      const cache = JSON.parse(localStorage.getItem(CHAVE_CACHE_CLIMA) || "null");
+      if (cache && Date.now() - cache.salvoEm < VALIDADE_CACHE_CLIMA_MS) {
+        setClima(cache.clima);
+        return;
+      }
+    } catch {
+      // cache invalido, ignora e busca de novo
+    }
+
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${FAZENDA_LAT}&longitude=${FAZENDA_LON}&current=temperature_2m,relative_humidity_2m&timezone=auto`;
     fetch(url)
       .then((r) => r.json())
       .then((dados) => {
-        setClima({
+        const novoClima = {
           temperatura: dados.current.temperature_2m,
           umidade: dados.current.relative_humidity_2m,
-        });
+        };
+        setClima(novoClima);
+        try {
+          localStorage.setItem(
+            CHAVE_CACHE_CLIMA,
+            JSON.stringify({ clima: novoClima, salvoEm: Date.now() })
+          );
+        } catch {
+          // sem espaco no localStorage, sem problema, so nao guarda o cache
+        }
       })
       .catch(() => setClima(null));
   }, []);
@@ -71,9 +101,48 @@ function CartaoClima({ clima }: { clima: ClimaAtual | null }) {
   );
 }
 
+function ChecklistPrimeiroUso({
+  semSetores,
+  semFuncionarios,
+}: {
+  semSetores: boolean;
+  semFuncionarios: boolean;
+}) {
+  if (!semSetores && !semFuncionarios) return null;
+  return (
+    <div className="card border-brand-300 bg-brand-50 dark:border-brand-800 dark:bg-brand-900/20">
+      <h3 className="mb-1 text-sm font-semibold text-brand-700 dark:text-brand-300">
+        Vamos começar
+      </h3>
+      <p className="mb-3 text-xs text-neutral-500">
+        Cadastre os setores e a equipe da fazenda para aproveitar o app.
+      </p>
+      <div className="flex gap-2">
+        {semSetores && (
+          <a
+            href="/setores"
+            className="flex-1 rounded-xl bg-brand-600 py-2 text-center text-xs font-semibold text-white dark:bg-brand-500"
+          >
+            Cadastrar setores
+          </a>
+        )}
+        {semFuncionarios && (
+          <a
+            href="/funcionarios"
+            className="flex-1 rounded-xl bg-brand-600 py-2 text-center text-xs font-semibold text-white dark:bg-brand-500"
+          >
+            Cadastrar equipe
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function PaginaAdmin() {
   const [resumo, setResumo] = useState<ResumoFinanceiro | null>(null);
   const [carregando, setCarregando] = useState(true);
+  const [temFuncionarios, setTemFuncionarios] = useState(true);
   const clima = useClimaAtual();
 
   const carregarResumo = useCallback(() => {
@@ -88,10 +157,24 @@ function PaginaAdmin() {
     carregarResumo();
   }, [carregarResumo]);
 
+  useEffect(() => {
+    fetch("/api/employees")
+      .then((r) => r.json())
+      .then((lista) => setTemFuncionarios(Array.isArray(lista) && lista.length > 0))
+      .catch(() => {});
+  }, []);
+
   return (
     <>
       <CabecalhoLogo />
       <div className="space-y-4 p-4">
+        {!carregando && resumo && (
+          <ChecklistPrimeiroUso
+            semSetores={resumo.porSetor.length === 0}
+            semFuncionarios={!temFuncionarios}
+          />
+        )}
+
         <div className="grid grid-cols-3 gap-2">
           <CartaoClima clima={clima} />
           <a

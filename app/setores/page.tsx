@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Header from "@/components/layout/Header";
 import { ResumoFinanceiro, TipoSetor } from "@/lib/types";
+import { useFetchList } from "@/lib/hooks/useFetchList";
+import { fetchJson } from "@/lib/fetchJson";
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -18,21 +20,15 @@ const TIPOS: { valor: TipoSetor; rotulo: string }[] = [
 const CORES = ["#3f8f34", "#8a5e2f", "#2f7127", "#b6874f", "#265a20", "#caa877"];
 
 export default function SetoresPage() {
-  const [resumo, setResumo] = useState<ResumoFinanceiro | null>(null);
+  const { dados: resumo, carregando, recarregar } = useFetchList<ResumoFinanceiro>(() =>
+    fetchJson("/api/summary")
+  );
   const [aberto, setAberto] = useState(false);
   const [nome, setNome] = useState("");
   const [tipo, setTipo] = useState<TipoSetor>("outra_cultura");
   const [cor, setCor] = useState(CORES[0]);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
-
-  function carregar() {
-    fetch("/api/summary").then((r) => r.json()).then(setResumo);
-  }
-
-  useEffect(() => {
-    carregar();
-  }, []);
 
   async function salvar() {
     if (!nome.trim()) {
@@ -55,7 +51,9 @@ export default function SetoresPage() {
       setNome("");
       setTipo("outra_cultura");
       setAberto(false);
-      carregar();
+      recarregar();
+    } catch {
+      setErro("Nao foi possivel salvar. Verifique sua conexao.");
     } finally {
       setSalvando(false);
     }
@@ -65,6 +63,14 @@ export default function SetoresPage() {
     <>
       <Header titulo="Setores" subtitulo="Café, Gado, Ovelhas e outras culturas" />
       <div className="space-y-3 p-4">
+        {carregando && (
+          <div className="card animate-pulse text-center text-sm text-neutral-400">Carregando setores...</div>
+        )}
+        {!carregando && resumo?.porSetor.length === 0 && (
+          <div className="card text-center text-sm text-neutral-400">
+            Nenhum setor cadastrado ainda. Adicione o primeiro abaixo.
+          </div>
+        )}
         {resumo?.porSetor.map((s) => (
           <div key={s.setor_id} className="card">
             <div className="mb-2 flex items-center gap-2">

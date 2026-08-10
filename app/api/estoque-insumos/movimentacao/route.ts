@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
       titulo: `Estoque baixo: ${insumo.nome}`,
       corpo: `Restam ${atualizado.quantidade_atual} ${insumo.unidade} (minimo: ${insumo.quantidade_minima}).`,
       url: "/estoque",
-    }).catch(() => {});
+    }).catch((e) => console.error("Falha ao notificar estoque baixo:", e));
   }
 
   return NextResponse.json(atualizado, { status: 201 });

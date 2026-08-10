@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import "@/lib/db-custos";
 import { talhaoExiste } from "@/lib/db-talhoes";
 import { ehAdminLogado } from "@/lib/auth-helpers";
+import { lerCorpoJson } from "@/lib/api";
 
 export async function DELETE(
   req: NextRequest,
@@ -39,7 +40,9 @@ export async function PATCH(
     return NextResponse.json({ error: "id invalido" }, { status: 400 });
   }
 
-  const body = await req.json();
+  const resultado = await lerCorpoJson<Record<string, string | number | null>>(req);
+  if (!resultado.ok) return resultado.resposta;
+  const body = resultado.body;
   const campos: string[] = [];
   const valores: (string | number | null)[] = [];
 

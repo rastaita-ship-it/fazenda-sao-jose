@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Header from "@/components/layout/Header";
 import { TransacaoComSetor, Setor, Talhao } from "@/lib/types";
+import { useToast } from "@/components/ui/ToastContext";
 
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -15,6 +16,7 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default function FluxoCaixaPage() {
+  const toast = useToast();
   const [transacoes, setTransacoes] = useState<TransacaoComSetor[]>([]);
   const [setores, setSetores] = useState<Setor[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -70,8 +72,14 @@ export default function FluxoCaixaPage() {
 
     setExcluindoId(id);
     try {
-      await fetch(`/api/transactions/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/transactions/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        toast.erro("Nao foi possivel excluir o lancamento. Tente novamente.");
+        return;
+      }
       setTransacoes((atual) => atual.filter((t) => t.id !== id));
+    } catch {
+      toast.erro("Nao foi possivel excluir o lancamento. Verifique sua conexao.");
     } finally {
       setExcluindoId(null);
     }
@@ -101,7 +109,12 @@ export default function FluxoCaixaPage() {
         const dados = await res.json();
         setEditRecibo(dados.url);
         carregar();
+      } else {
+        const dados = await res.json().catch(() => ({}));
+        toast.erro(dados.error ?? "Nao foi possivel enviar o recibo. Tente novamente.");
       }
+    } catch {
+      toast.erro("Nao foi possivel enviar o recibo. Verifique sua conexao.");
     } finally {
       setEnviandoRecibo(false);
     }

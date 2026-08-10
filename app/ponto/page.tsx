@@ -182,6 +182,7 @@ export default function PontoPage() {
         latitude: localizacao.latitude,
         longitude: localizacao.longitude,
         foto_base64: fotoBase64,
+        chave_cliente: crypto.randomUUID(),
       };
 
       try {

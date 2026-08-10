@@ -1,11 +1,16 @@
-const CACHE_NOME = "fazenda-sao-jose-v1";
-const ARQUIVOS_ESSENCIAIS = ["/", "/ponto", "/manejo", "/manifest.json", "/logo.png"];
+const CACHE_NOME = "fazenda-sao-jose-v2";
+const ARQUIVOS_ESSENCIAIS = ["/", "/ponto", "/manejo", "/manifest.json", "/logo.png", "/offline.html"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NOME).then((cache) => cache.addAll(ARQUIVOS_ESSENCIAIS))
   );
-  self.skipWaiting();
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("activate", (event) => {
@@ -30,6 +35,8 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  const ehNavegacao = event.request.mode === "navigate";
+
   event.respondWith(
     caches.match(event.request).then((respostaCache) => {
       const buscaRede = fetch(event.request)
@@ -39,7 +46,7 @@ self.addEventListener("fetch", (event) => {
           });
           return respostaRede;
         })
-        .catch(() => respostaCache);
+        .catch(() => respostaCache || (ehNavegacao ? caches.match("/offline.html") : undefined));
 
       return respostaCache || buscaRede;
     })

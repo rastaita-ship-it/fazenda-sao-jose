@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Header from "@/components/layout/Header";
+import { useToast } from "@/components/ui/ToastContext";
 
 interface Meta {
   id: number;
@@ -53,6 +54,7 @@ function rotuloTipo(tipo: string) {
 }
 
 export default function MetasPage() {
+  const toast = useToast();
   const [metas, setMetas] = useState<Meta[]>([]);
   const [setores, setSetores] = useState<Setor[]>([]);
   const [produtos, setProdutos] = useState<Produto[]>([]);
@@ -156,21 +158,37 @@ export default function MetasPage() {
 
   async function arquivar() {
     if (!editandoId) return;
-    await fetch(`/api/metas/${editandoId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "arquivada" }),
-    });
-    setModalAberto(false);
-    carregar();
+    try {
+      const res = await fetch(`/api/metas/${editandoId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "arquivada" }),
+      });
+      if (!res.ok) {
+        toast.erro("Nao foi possivel arquivar a meta. Tente novamente.");
+        return;
+      }
+      setModalAberto(false);
+      carregar();
+    } catch {
+      toast.erro("Nao foi possivel arquivar a meta. Verifique sua conexao.");
+    }
   }
 
   async function excluir() {
     if (!editandoId) return;
     if (!window.confirm(`Excluir a meta "${titulo}"?`)) return;
-    await fetch(`/api/metas/${editandoId}`, { method: "DELETE" });
-    setModalAberto(false);
-    carregar();
+    try {
+      const res = await fetch(`/api/metas/${editandoId}`, { method: "DELETE" });
+      if (!res.ok) {
+        toast.erro("Nao foi possivel excluir a meta. Tente novamente.");
+        return;
+      }
+      setModalAberto(false);
+      carregar();
+    } catch {
+      toast.erro("Nao foi possivel excluir a meta. Verifique sua conexao.");
+    }
   }
 
   return (

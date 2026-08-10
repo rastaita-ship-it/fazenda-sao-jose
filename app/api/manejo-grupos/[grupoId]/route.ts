@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-manejo";
 import "@/lib/db-manejo-grupo";
+import { estaLogado } from "@/lib/auth-helpers";
+import { lerCorpoJson } from "@/lib/api";
 
 interface ManejoRow {
   id: number;
@@ -23,13 +25,26 @@ interface ManejoRow {
  * do novo intervalo (se ainda nao concluidos) e adiciona dias novos.
  * Body: { atividade_nome?, funcionario_id?, observacao?, data_inicio?, data_fim? }
  */
+const MAX_DIAS_INTERVALO = 366;
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { grupoId: string } }
 ) {
+  if (!estaLogado(req)) {
+    return NextResponse.json({ error: "Precisa estar logado." }, { status: 401 });
+  }
+
   const grupoId = params.grupoId;
-  const body = await req.json();
-  const { atividade_nome, funcionario_id, observacao, data_inicio, data_fim } = body;
+  const resultado = await lerCorpoJson<{
+    atividade_nome?: string;
+    funcionario_id?: number | null;
+    observacao?: string | null;
+    data_inicio?: string;
+    data_fim?: string;
+  }>(req);
+  if (!resultado.ok) return resultado.resposta;
+  const { atividade_nome, funcionario_id, observacao, data_inicio, data_fim } = resultado.body;
 
   const itensAtuais = db
     .prepare("SELECT * FROM manejos WHERE grupo_id = ? ORDER BY data_planejada ASC")
@@ -66,9 +81,20 @@ export async function PATCH(
 
   // Se o periodo mudou, recalcula os dias
   if (data_inicio) {
-    const novasDatas: string[] = [];
     const inicio = new Date(data_inicio + "T12:00:00");
     const fim = data_fim ? new Date(data_fim + "T12:00:00") : inicio;
+    if (Number.isNaN(inicio.getTime()) || Number.isNaN(fim.getTime()) || fim < inicio) {
+      return NextResponse.json({ error: "Periodo invalido." }, { status: 400 });
+    }
+    const diasNoIntervalo = Math.round((fim.getTime() - inicio.getTime()) / 86400000) + 1;
+    if (diasNoIntervalo > MAX_DIAS_INTERVALO) {
+      return NextResponse.json(
+        { error: `O periodo nao pode ter mais de ${MAX_DIAS_INTERVALO} dias.` },
+        { status: 400 }
+      );
+    }
+
+    const novasDatas: string[] = [];
     const atual = new Date(inicio);
     while (atual <= fim) {
       novasDatas.push(atual.toISOString().slice(0, 10));
@@ -122,6 +148,10 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: { grupoId: string } }
 ) {
+  if (!estaLogado(req)) {
+    return NextResponse.json({ error: "Precisa estar logado." }, { status: 401 });
+  }
+
   const grupoId = params.grupoId;
   db.prepare("DELETE FROM manejos WHERE grupo_id = ?").run(grupoId);
   return NextResponse.json({ ok: true });

@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
 } from "recharts";
 import Header from "@/components/layout/Header";
 import { ResumoFinanceiro } from "@/lib/types";
+import { useFetchList } from "@/lib/hooks/useFetchList";
+import { fetchJson } from "@/lib/fetchJson";
 
 interface TendenciaMes {
   mes: string;
@@ -21,13 +22,14 @@ function formatarMesCurto(mesStr: string) {
 }
 
 export default function RelatoriosPage() {
-  const [resumo, setResumo] = useState<ResumoFinanceiro | null>(null);
-  const [tendencia, setTendencia] = useState<TendenciaMes[]>([]);
-
-  useEffect(() => {
-    fetch("/api/summary").then((r) => r.json()).then(setResumo);
-    fetch("/api/tendencia").then((r) => r.json()).then(setTendencia);
-  }, []);
+  const { dados, carregando } = useFetchList(() =>
+    Promise.all([
+      fetchJson<ResumoFinanceiro>("/api/summary"),
+      fetchJson<TendenciaMes[]>("/api/tendencia"),
+    ])
+  );
+  const resumo = dados?.[0] ?? null;
+  const tendencia = dados?.[1] ?? [];
 
   const dadosGrafico =
     resumo?.porSetor.map((s) => ({
@@ -46,6 +48,9 @@ export default function RelatoriosPage() {
     <>
       <Header titulo={"Relat\u00f3rios"} subtitulo={"Lucratividade por setor (m\u00eas atual)"} />
       <div className="space-y-4 p-4">
+        {carregando && (
+          <div className="card animate-pulse text-center text-sm text-neutral-400">Carregando relat\u00f3rios...</div>
+        )}
         <div className="card">
           <h2 className="mb-3 text-base font-semibold">Tendencia mensal (12 meses)</h2>
           <div className="h-64 w-full">

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { ResumoFinanceiro } from "@/lib/types";
+import { estaLogado } from "@/lib/auth-helpers";
 
 /**
  * GET /api/summary?from=YYYY-MM-DD&to=YYYY-MM-DD
@@ -9,6 +10,10 @@ import { ResumoFinanceiro } from "@/lib/types";
  * "previsto"/"pendente" entries don't distort the real cash position.
  */
 export async function GET(req: NextRequest) {
+  if (!estaLogado(req)) {
+    return NextResponse.json({ error: "Precisa estar logado." }, { status: 401 });
+  }
+
   const { searchParams } = new URL(req.url);
   const now = new Date();
   const defaultFrom = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;

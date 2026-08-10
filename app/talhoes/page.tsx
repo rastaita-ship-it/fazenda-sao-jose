@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Header from "@/components/layout/Header";
+import { useToast } from "@/components/ui/ToastContext";
 
 interface Producao {
   unidade: string;
@@ -38,6 +39,7 @@ function formatarNumero(valor: number) {
 }
 
 export default function TalhoesPage() {
+  const toast = useToast();
   const [talhoes, setTalhoes] = useState<TalhaoResumo[]>([]);
   const [setores, setSetores] = useState<Setor[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -125,9 +127,17 @@ export default function TalhoesPage() {
     if (!editandoId) return;
     const confirmar = window.confirm(`Excluir "${nome}"? Os lancamentos ja feitos permanecem no historico.`);
     if (!confirmar) return;
-    await fetch(`/api/talhoes/${editandoId}`, { method: "DELETE" });
-    setModalAberto(false);
-    carregar();
+    try {
+      const res = await fetch(`/api/talhoes/${editandoId}`, { method: "DELETE" });
+      if (!res.ok) {
+        toast.erro("Nao foi possivel excluir o talhao. Tente novamente.");
+        return;
+      }
+      setModalAberto(false);
+      carregar();
+    } catch {
+      toast.erro("Nao foi possivel excluir o talhao. Verifique sua conexao.");
+    }
   }
 
   const grupos = setores

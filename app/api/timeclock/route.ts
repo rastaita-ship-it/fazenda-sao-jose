@@ -3,8 +3,11 @@ import { db } from "@/lib/db";
 import "@/lib/db-ponto";
 import "@/lib/db-ponto-geo";
 import "@/lib/db-ponto-foto";
+import "@/lib/db-ponto-chave";
 import { estaDentroDaFazenda, calcularDistanciaMetros, FAZENDA_COORDENADAS } from "@/lib/geo";
 import { pastaUpload } from "@/lib/uploads";
+import { estaLogado } from "@/lib/auth-helpers";
+import { lerCorpoJson } from "@/lib/api";
 import fs from "fs";
 import path from "path";
 
@@ -35,6 +38,10 @@ export interface RegistroPonto {
 }
 
 export async function GET(req: NextRequest) {
+  if (!estaLogado(req)) {
+    return NextResponse.json({ error: "Precisa estar logado." }, { status: 401 });
+  }
+
   const { searchParams } = new URL(req.url);
   const funcionarioId = searchParams.get("funcionario_id");
   const data = searchParams.get("data");
@@ -69,11 +76,32 @@ export async function GET(req: NextRequest) {
  * estiver fora do raio permitido da fazenda.
  */
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { funcionario_id, latitude, longitude, observacao, foto_base64 } = body;
+  if (!estaLogado(req)) {
+    return NextResponse.json({ error: "Precisa estar logado." }, { status: 401 });
+  }
+
+  const resultado = await lerCorpoJson<{
+    funcionario_id?: number;
+    latitude?: number;
+    longitude?: number;
+    observacao?: string;
+    foto_base64?: string;
+    chave_cliente?: string;
+  }>(req);
+  if (!resultado.ok) return resultado.resposta;
+  const { funcionario_id, latitude, longitude, observacao, foto_base64, chave_cliente } = resultado.body;
 
   if (!funcionario_id) {
     return NextResponse.json({ error: "funcionario_id é obrigatório." }, { status: 400 });
+  }
+
+  if (typeof chave_cliente === "string" && chave_cliente) {
+    const existente = db
+      .prepare("SELECT * FROM registros_ponto WHERE chave_cliente = ?")
+      .get(chave_cliente);
+    if (existente) {
+      return NextResponse.json(existente, { status: 200 });
+    }
   }
   if (latitude == null || longitude == null) {
     return NextResponse.json(
@@ -111,10 +139,17 @@ export async function POST(req: NextRequest) {
   const proximoTipo = !ultimoHoje || ultimoHoje.tipo === "saida" ? "entrada" : "saida";
 
   const stmt = db.prepare(
-    `INSERT INTO registros_ponto (funcionario_id, tipo, data_hora, observacao, latitude, longitude, dentro_area)
-     VALUES (?, ?, datetime('now', 'localtime'), ?, ?, ?, 1)`
+    `INSERT INTO registros_ponto (funcionario_id, tipo, data_hora, observacao, latitude, longitude, dentro_area, chave_cliente)
+     VALUES (?, ?, datetime('now', 'localtime'), ?, ?, ?, 1, ?)`
   );
-  const result = stmt.run(funcionario_id, proximoTipo, observacao ?? null, latitude, longitude);
+  const result = stmt.run(
+    funcionario_id,
+    proximoTipo,
+    observacao ?? null,
+    latitude,
+    longitude,
+    typeof chave_cliente === "string" && chave_cliente ? chave_cliente : null
+  );
   const registroId = Number(result.lastInsertRowid);
 
   if (typeof foto_base64 === "string" && foto_base64.length > 0) {

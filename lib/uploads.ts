@@ -12,6 +12,13 @@ export function pastaUpload(subpasta: string) {
   return caminho;
 }
 
+export const TAMANHO_MAXIMO_UPLOAD_BYTES = 10 * 1024 * 1024; // 10MB
+
+/** Checa o tamanho do arquivo (via File.size, sem precisar ler o conteudo) antes de gravar em disco. */
+export function arquivoDentroDoLimite(arquivo: File, limiteBytes = TAMANHO_MAXIMO_UPLOAD_BYTES): boolean {
+  return arquivo.size > 0 && arquivo.size <= limiteBytes;
+}
+
 /** Converte um campo de formData (ex: "42") num inteiro positivo, ou null se invalido. */
 export function parseIdObrigatorio(valorBruto: string | null): number | null {
   if (!valorBruto) return null;

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-galeria";
-import { pastaUpload, caminhoDeUploadSeguro } from "@/lib/uploads";
+import { pastaUpload, caminhoDeUploadSeguro, arquivoDentroDoLimite } from "@/lib/uploads";
 import { estaLogado } from "@/lib/auth-helpers";
 import fs from "fs";
 import path from "path";
@@ -46,6 +46,9 @@ export async function POST(req: NextRequest) {
   const ext = path.extname(arquivo.name).toLowerCase();
   if (![".jpg", ".jpeg", ".png", ".webp", ".heic"].includes(ext)) {
     return NextResponse.json({ error: "Envie uma imagem valida." }, { status: 400 });
+  }
+  if (!arquivoDentroDoLimite(arquivo)) {
+    return NextResponse.json({ error: "Arquivo muito grande (limite de 10MB)." }, { status: 400 });
   }
 
   const pastaDestino = pastaUpload("galeria");

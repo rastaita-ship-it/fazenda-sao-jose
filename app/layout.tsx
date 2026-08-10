@@ -3,6 +3,7 @@ import "./globals.css";
 import BottomNav from "@/components/layout/BottomNav";
 import AuthGate from "@/components/auth/AuthGate";
 import RegistrarServiceWorker from "@/components/pwa/RegistrarServiceWorker";
+import { ToastProvider } from "@/components/ui/ToastContext";
 
 export const metadata: Metadata = {
   title: "Fazenda Sao Jose",
@@ -12,6 +13,10 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "default",
     title: "Faz. Sao Jose",
+  },
+  icons: {
+    icon: "/icons/icon-192.png",
+    apple: "/icons/icon-192.png",
   },
 };
 
@@ -30,11 +35,13 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body>
-        <RegistrarServiceWorker />
-        <AuthGate>
-          <main className="mx-auto min-h-screen max-w-md pb-24">{children}</main>
-          <BottomNav />
-        </AuthGate>
+        <ToastProvider>
+          <RegistrarServiceWorker />
+          <AuthGate>
+            <main className="mx-auto min-h-screen max-w-md pb-24">{children}</main>
+            <BottomNav />
+          </AuthGate>
+        </ToastProvider>
       </body>
     </html>
   );

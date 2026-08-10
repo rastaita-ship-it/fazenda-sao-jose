@@ -1,17 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-manejo";
+import { estaLogado } from "@/lib/auth-helpers";
+import { lerCorpoJson } from "@/lib/api";
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  if (!estaLogado(req)) {
+    return NextResponse.json({ error: "Precisa estar logado." }, { status: 401 });
+  }
+
   const id = Number(params.id);
   if (!id) {
     return NextResponse.json({ error: "id invalido" }, { status: 400 });
   }
 
-  const body = await req.json();
+  const resultado = await lerCorpoJson<Record<string, string | number | null>>(req);
+  if (!resultado.ok) return resultado.resposta;
+  const body = resultado.body;
   const campos: string[] = [];
   const valores: (string | number | null)[] = [];
 
@@ -45,6 +53,10 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  if (!estaLogado(req)) {
+    return NextResponse.json({ error: "Precisa estar logado." }, { status: 401 });
+  }
+
   const id = Number(params.id);
   db.prepare("DELETE FROM manejos WHERE id = ?").run(id);
   return NextResponse.json({ ok: true });
