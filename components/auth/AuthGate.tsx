@@ -27,17 +27,28 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
+    let cancelado = false;
+    setUsuario(undefined);
     fetch("/api/auth/me")
       .then((r) => r.json())
-      .then(setUsuario);
-  }, [pathname]);
-
-  useEffect(() => {
-    if (usuario === undefined) return;
-    if (!usuario && pathname !== "/login") {
-      router.push("/login");
-    }
-  }, [usuario, pathname, router]);
+      .then((dados) => {
+        if (cancelado) return;
+        setUsuario(dados);
+        // A decisao de redirecionar fica dentro do proprio fetch (em vez de
+        // um segundo useEffect que reage a `usuario`) de proposito: um
+        // efeito separado rodaria na mesma passada que este, usando o
+        // valor de `usuario` de ANTES da troca de pathname (ex: null, por
+        // ter acabado de sair do /login) — e foi exatamente isso que fazia
+        // o app mandar o usuario de volta pro /login um instante depois de
+        // um login valido.
+        if (!dados && pathname !== "/login") {
+          router.push("/login");
+        }
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, [pathname, router]);
 
   if (pathname === "/login") {
     return <>{children}</>;
