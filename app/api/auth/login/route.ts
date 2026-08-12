@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import "@/lib/db-ponto";
 import "@/lib/db-auth";
 import { estaBloqueado, registrarTentativaFalha, limparTentativas, obterIpRequisicao } from "@/lib/rate-limit";
+import { lerCorpoJson } from "@/lib/api";
 
 interface FuncionarioComPin {
   id: number;
@@ -29,8 +30,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const body = await req.json();
-  const { pin } = body;
+  const resultado = await lerCorpoJson<{ pin?: string }>(req);
+  if (!resultado.ok) return resultado.resposta;
+  const { pin } = resultado.body;
 
   if (!pin) {
     return NextResponse.json({ error: "Informe o PIN." }, { status: 400 });

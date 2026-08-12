@@ -20,6 +20,21 @@ a porta na sua rede local (ex: `npm start -- -H 0.0.0.0`) e acesse pelo
 navegador do celular usando o IP do Mac. Depois use "Adicionar à Tela de
 Início" no Safari/Chrome.
 
+## Testes
+
+```bash
+npm test          # roda a suite uma vez
+npm run test:watch # modo watch, refaz ao salvar
+```
+
+Usa Vitest. Em teste (`NODE_ENV=test`), `lib/db.ts` usa um banco SQLite
+em memória (`:memory:`) em vez de `data/fazenda.db` — os testes nunca
+tocam no banco de desenvolvimento. A suite cobre o limitador de
+tentativas de login (`lib/rate-limit.ts`), a rota de login (PIN
+correto/errado, bloqueio por IP/PIN/global), a rota de ponto (401 sem
+sessão, idempotência da fila offline) e o `AuthGate` (guarda de
+autenticação nas telas).
+
 ## Estrutura do projeto
 
 ```

@@ -14,10 +14,13 @@ import fs from "fs";
  * -----------------------------------------------------------------------
  */
 
+// Em teste (vitest) usamos um banco em memoria, sempre limpo, pra nunca
+// escrever no fazenda.db real de desenvolvimento nem exigir setup manual.
+const MODO_TESTE = process.env.NODE_ENV === "test";
 const DATA_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH || path.join(process.cwd(), "data");
-const DB_PATH = path.join(DATA_DIR, "fazenda.db");
+const DB_PATH = MODO_TESTE ? ":memory:" : path.join(DATA_DIR, "fazenda.db");
 
-if (!fs.existsSync(DATA_DIR)) {
+if (!MODO_TESTE && !fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
