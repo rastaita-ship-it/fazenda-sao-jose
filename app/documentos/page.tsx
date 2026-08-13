@@ -221,6 +221,14 @@ export default function DocumentosPage() {
     <>
       <Header titulo="Documentos" subtitulo="Licenças, seguros e CNH com alerta de vencimento" />
       <div className="space-y-3 p-4 pb-24">
+        <a
+          href="/financiamentos"
+          className="card flex items-center justify-between text-sm font-medium text-brand-600 dark:text-brand-400"
+        >
+          Financiamentos e parcelas de crédito rural
+          <span aria-hidden="true">→</span>
+        </a>
+
         <div className="flex gap-2 overflow-x-auto">
           <button
             onClick={() => setFiltroTipo("todos")}

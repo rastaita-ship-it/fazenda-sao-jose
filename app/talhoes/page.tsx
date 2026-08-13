@@ -22,6 +22,9 @@ interface TalhaoResumo {
   despesas: number;
   saldo: number;
   producao: Producao[];
+  lotacao_ua_ha: number | null;
+  qtd_animais_pesados: number;
+  qtd_animais_total: number;
 }
 
 interface Setor {
@@ -226,6 +229,20 @@ export default function TalhoesPage() {
                                   </span>
                                 </div>
                               ))}
+                            </div>
+                          )}
+                          {t.lotacao_ua_ha != null && (
+                            <div className="mt-3 border-t border-neutral-100 pt-2 text-xs dark:border-neutral-800">
+                              <div className="flex items-center justify-between">
+                                <span className="text-neutral-500">Lotação</span>
+                                <span className="font-medium">{formatarNumero(t.lotacao_ua_ha)} UA/ha</span>
+                              </div>
+                              {t.qtd_animais_pesados < t.qtd_animais_total && (
+                                <p className="mt-0.5 text-[10px] text-neutral-400">
+                                  Baseado em {t.qtd_animais_pesados} de {t.qtd_animais_total} animais com peso
+                                  registrado
+                                </p>
+                              )}
                             </div>
                           )}
                         </button>

@@ -3,6 +3,8 @@ import { db } from "./db";
 import "./db-notificacoes";
 import "./db-manejo";
 import "./db-documentos";
+import "./db-financiamentos";
+import "./db-animais";
 
 export interface PayloadNotificacao {
   titulo: string;
@@ -94,6 +96,8 @@ export async function verificarEEnviarAvisosDiarios() {
 
   await enviarAvisosDeManejoDoDia(hoje);
   await enviarAvisoDeDocumentosVencendo();
+  await enviarAvisoDeParcelasVencendo();
+  await enviarAvisoDeVacinasVencendo();
 
   salvarConfig("ultimo_envio_diario", hoje);
 }
@@ -149,5 +153,56 @@ async function enviarAvisoDeDocumentosVencendo() {
     titulo: `${documentos.length} documento${documentos.length > 1 ? "s" : ""} vencendo ou vencido${documentos.length > 1 ? "s" : ""}`,
     corpo,
     url: "/documentos",
+  });
+}
+
+async function enviarAvisoDeParcelasVencendo() {
+  const hoje = new Date().toISOString().slice(0, 10);
+  const parcelas = db
+    .prepare(
+      `SELECT descricao FROM financiamentos_rurais
+       WHERE status = 'ativo' AND proxima_parcela <= date(?, '+7 days')
+       ORDER BY proxima_parcela ASC`
+    )
+    .all(hoje) as { descricao: string }[];
+
+  if (parcelas.length === 0) return;
+
+  const corpo =
+    parcelas.length === 1
+      ? parcelas[0].descricao
+      : `${parcelas[0].descricao} e mais ${parcelas.length - 1}`;
+
+  await enviarParaAdmins({
+    titulo: `${parcelas.length} parcela${parcelas.length > 1 ? "s" : ""} de financiamento vencendo ou vencida${parcelas.length > 1 ? "s" : ""}`,
+    corpo,
+    url: "/financiamentos",
+  });
+}
+
+async function enviarAvisoDeVacinasVencendo() {
+  const hoje = new Date().toISOString().slice(0, 10);
+  const vacinas = db
+    .prepare(
+      `SELECT v.produto, a.identificacao
+       FROM animais_vacinas v
+       JOIN animais a ON a.id = v.animal_id
+       WHERE a.status = 'ativo' AND v.proxima_dose IS NOT NULL
+         AND v.proxima_dose <= date(?, '+7 days')
+       ORDER BY v.proxima_dose ASC`
+    )
+    .all(hoje) as { produto: string; identificacao: string }[];
+
+  if (vacinas.length === 0) return;
+
+  const corpo =
+    vacinas.length === 1
+      ? `${vacinas[0].produto} (${vacinas[0].identificacao})`
+      : `${vacinas[0].produto} (${vacinas[0].identificacao}) e mais ${vacinas.length - 1}`;
+
+  await enviarParaAdmins({
+    titulo: `${vacinas.length} dose${vacinas.length > 1 ? "s" : ""} de vacina vencendo ou vencida${vacinas.length > 1 ? "s" : ""}`,
+    corpo,
+    url: "/animais",
   });
 }

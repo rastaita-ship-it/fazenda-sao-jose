@@ -183,6 +183,17 @@ export default function AnimaisPage() {
     <>
       <Header titulo="Animais" subtitulo="Ficha individual do rebanho" />
       <div className="space-y-4 p-4 pb-24">
+        <div className="card border-neutral-200 bg-neutral-50 text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900/50">
+          <p className="mb-1 font-semibold text-neutral-600 dark:text-neutral-300">
+            Calendário sanitário obrigatório (referência nacional)
+          </p>
+          <p>
+            Aftosa: normalmente maio e novembro. Brucelose: fêmeas de 3 a 8 meses. As datas exatas variam por
+            estado — confirme com a Adab/IDF local. Cadastre a "próxima dose" na vacina do animal para receber
+            aviso automático aqui no app.
+          </p>
+        </div>
+
         <div className="flex gap-2 overflow-x-auto">
           {FILTROS_STATUS.map((f) => (
             <button

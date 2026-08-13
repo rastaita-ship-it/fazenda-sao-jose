@@ -19,6 +19,7 @@ const PAGINAS_ADMIN = [
   "/metas",
   "/historico-precos",
   "/funcionarios",
+  "/financiamentos",
 ];
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
