@@ -6,13 +6,14 @@ import { lerCorpoJson } from "@/lib/api";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   if (!estaLogado(req)) {
     return NextResponse.json({ error: "Precisa estar logado." }, { status: 401 });
   }
 
-  const id = Number(params.id);
+  const { id: idParam } = await params;
+  const id = Number(idParam);
   if (!id) {
     return NextResponse.json({ error: "id invalido" }, { status: 400 });
   }
@@ -51,13 +52,14 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   if (!estaLogado(req)) {
     return NextResponse.json({ error: "Precisa estar logado." }, { status: 401 });
   }
 
-  const id = Number(params.id);
+  const { id: idParam } = await params;
+  const id = Number(idParam);
   db.prepare("DELETE FROM manejos WHERE id = ?").run(id);
   return NextResponse.json({ ok: true });
 }

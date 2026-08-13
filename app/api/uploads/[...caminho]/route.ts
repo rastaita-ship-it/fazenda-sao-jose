@@ -14,9 +14,9 @@ const TIPOS_MIME: Record<string, string> = {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { caminho: string[] } }
+  { params }: { params: Promise<{ caminho: string[] }> }
 ) {
-  const partes = params.caminho;
+  const { caminho: partes } = await params;
   if (!partes || partes.some((p) => p.includes(".."))) {
     return NextResponse.json({ error: "caminho invalido" }, { status: 400 });
   }

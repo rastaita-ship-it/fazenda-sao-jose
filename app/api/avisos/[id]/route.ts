@@ -5,13 +5,14 @@ import { estaLogado, ehAdminLogado } from "@/lib/auth-helpers";
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   if (!estaLogado(req)) {
     return NextResponse.json({ error: "Precisa estar logado." }, { status: 401 });
   }
 
-  const id = Number(params.id);
+  const { id: idParam } = await params;
+  const id = Number(idParam);
   if (!id) return NextResponse.json({ error: "id invalido" }, { status: 400 });
 
   const aviso = db.prepare("SELECT autor_id FROM avisos WHERE id = ?").get(id) as

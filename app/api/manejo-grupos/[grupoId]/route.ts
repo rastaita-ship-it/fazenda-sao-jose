@@ -29,13 +29,13 @@ const MAX_DIAS_INTERVALO = 366;
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { grupoId: string } }
+  { params }: { params: Promise<{ grupoId: string }> }
 ) {
   if (!estaLogado(req)) {
     return NextResponse.json({ error: "Precisa estar logado." }, { status: 401 });
   }
 
-  const grupoId = params.grupoId;
+  const { grupoId } = await params;
   const resultado = await lerCorpoJson<{
     atividade_nome?: string;
     funcionario_id?: number | null;
@@ -146,13 +146,13 @@ export async function PATCH(
  */
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { grupoId: string } }
+  { params }: { params: Promise<{ grupoId: string }> }
 ) {
   if (!estaLogado(req)) {
     return NextResponse.json({ error: "Precisa estar logado." }, { status: 401 });
   }
 
-  const grupoId = params.grupoId;
+  const { grupoId } = await params;
   db.prepare("DELETE FROM manejos WHERE grupo_id = ?").run(grupoId);
   return NextResponse.json({ ok: true });
 }

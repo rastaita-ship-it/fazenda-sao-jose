@@ -5,13 +5,14 @@ import { ehAdminLogado } from "@/lib/auth-helpers";
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   if (!ehAdminLogado(req)) {
     return NextResponse.json({ error: "Apenas administradores." }, { status: 403 });
   }
 
-  const id = Number(params.id);
+  const { id: idParam } = await params;
+  const id = Number(idParam);
   if (!id) return NextResponse.json({ error: "id invalido" }, { status: 400 });
   db.prepare("DELETE FROM contatos_emergencia WHERE id = ?").run(id);
   return NextResponse.json({ ok: true });

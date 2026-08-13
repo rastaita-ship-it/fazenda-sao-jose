@@ -5,14 +5,15 @@ import { ehAdminLogado } from "@/lib/auth-helpers";
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string; registroId: string } }
+  { params }: { params: Promise<{ id: string; registroId: string }> }
 ) {
   if (!ehAdminLogado(req)) {
     return NextResponse.json({ error: "Apenas administradores." }, { status: 403 });
   }
+  const { id, registroId } = await params;
   db.prepare("DELETE FROM animais_vacinas WHERE id = ? AND animal_id = ?").run(
-    Number(params.registroId),
-    Number(params.id)
+    Number(registroId),
+    Number(id)
   );
   return NextResponse.json({ ok: true });
 }

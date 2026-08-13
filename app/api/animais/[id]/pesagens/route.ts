@@ -5,13 +5,14 @@ import { ehAdminLogado } from "@/lib/auth-helpers";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   if (!ehAdminLogado(req)) {
     return NextResponse.json({ error: "Apenas administradores." }, { status: 403 });
   }
 
-  const animalId = Number(params.id);
+  const { id: idParam } = await params;
+  const animalId = Number(idParam);
   if (!animalId) {
     return NextResponse.json({ error: "id invalido" }, { status: 400 });
   }
