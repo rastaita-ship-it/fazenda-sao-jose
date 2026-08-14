@@ -39,6 +39,16 @@ interface Setor {
   nome: string;
 }
 
+interface Funcionario {
+  id: number;
+  nome: string;
+}
+
+interface Talhao {
+  id: number;
+  nome: string;
+}
+
 function formatarMoeda(valor: number) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
@@ -53,6 +63,8 @@ export default function EstoquePage() {
   const [insumos, setInsumos] = useState<Insumo[]>([]);
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [setores, setSetores] = useState<Setor[]>([]);
+  const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
+  const [talhoes, setTalhoes] = useState<Talhao[]>([]);
   const [carregando, setCarregando] = useState(true);
 
   const [mostrarForm, setMostrarForm] = useState(false);
@@ -73,6 +85,10 @@ export default function EstoquePage() {
   const [movPreco, setMovPreco] = useState("");
   const [movCustoTotal, setMovCustoTotal] = useState("");
   const [movFornecedor, setMovFornecedor] = useState("");
+  const [movCriarLancamento, setMovCriarLancamento] = useState(true);
+  const [movFuncionarioId, setMovFuncionarioId] = useState<number | "">("");
+  const [movFinalidade, setMovFinalidade] = useState("");
+  const [movTalhaoId, setMovTalhaoId] = useState<number | "">("");
   const [movErro, setMovErro] = useState("");
   const [movSalvando, setMovSalvando] = useState(false);
 
@@ -92,6 +108,8 @@ export default function EstoquePage() {
   useEffect(() => {
     carregar();
     fetch("/api/sectors").then((r) => r.json()).then(setSetores);
+    fetch("/api/employees").then((r) => r.json()).then(setFuncionarios);
+    fetch("/api/talhoes").then((r) => r.json()).then(setTalhoes);
   }, []);
 
   function limparForm() {
@@ -120,6 +138,7 @@ export default function EstoquePage() {
             quantidade_atual: qtdInicial ? Number(qtdInicial.replace(",", ".")) : 0,
             quantidade_minima: qtdMinima ? Number(qtdMinima.replace(",", ".")) : null,
             custo_unitario: custoUnit ? Number(custoUnit.replace(",", ".")) : null,
+            setor_id: setorId || null,
           }),
         });
       } else {
@@ -151,6 +170,10 @@ export default function EstoquePage() {
     setMovPreco("");
     setMovCustoTotal("");
     setMovFornecedor("");
+    setMovCriarLancamento(true);
+    setMovFuncionarioId("");
+    setMovFinalidade("");
+    setMovTalhaoId("");
     setMovErro("");
   }
 
@@ -172,6 +195,11 @@ export default function EstoquePage() {
         if (movTipo === "entrada") {
           if (movCustoTotal) corpoBase.custo_total = Number(movCustoTotal.replace(",", "."));
           if (movFornecedor.trim()) corpoBase.fornecedor = movFornecedor.trim();
+          corpoBase.criar_lancamento = movCriarLancamento;
+        } else {
+          if (movFuncionarioId) corpoBase.funcionario_id = movFuncionarioId;
+          if (movFinalidade.trim()) corpoBase.finalidade = movFinalidade.trim();
+          if (movTalhaoId) corpoBase.talhao_id = movTalhaoId;
         }
       } else {
         corpoBase.produto_id = movId;
@@ -341,13 +369,27 @@ export default function EstoquePage() {
                 onChange={(e) => setNome(e.target.value)}
               />
               {aba === "insumos" ? (
-                <select className="input-field" value={categoria} onChange={(e) => setCategoria(e.target.value)}>
-                  {CATEGORIAS_INSUMO.map((c) => (
-                    <option key={c.valor} value={c.valor}>
-                      {c.rotulo}
-                    </option>
-                  ))}
-                </select>
+                <>
+                  <select className="input-field" value={categoria} onChange={(e) => setCategoria(e.target.value)}>
+                    {CATEGORIAS_INSUMO.map((c) => (
+                      <option key={c.valor} value={c.valor}>
+                        {c.rotulo}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    className="input-field"
+                    value={setorId}
+                    onChange={(e) => setSetorId(e.target.value ? Number(e.target.value) : "")}
+                  >
+                    <option value="">Setor (opcional, usado nas despesas de compra)</option>
+                    {setores.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.nome}
+                      </option>
+                    ))}
+                  </select>
+                </>
               ) : (
                 <select className="input-field" value={setorId} onChange={(e) => setSetorId(Number(e.target.value))}>
                   <option value="">Setor (opcional)</option>
@@ -455,6 +497,50 @@ export default function EstoquePage() {
                     value={movFornecedor}
                     onChange={(e) => setMovFornecedor(e.target.value)}
                   />
+                  {movCustoTotal && (
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={movCriarLancamento}
+                        onChange={(e) => setMovCriarLancamento(e.target.checked)}
+                      />
+                      Lançar despesa automaticamente no fluxo de caixa
+                    </label>
+                  )}
+                </>
+              )}
+              {aba === "insumos" && movTipo === "saida" && (
+                <>
+                  <select
+                    className="input-field"
+                    value={movFuncionarioId}
+                    onChange={(e) => setMovFuncionarioId(e.target.value ? Number(e.target.value) : "")}
+                  >
+                    <option value="">Quem retirou (opcional)</option>
+                    {funcionarios.map((f) => (
+                      <option key={f.id} value={f.id}>
+                        {f.nome}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    className="input-field"
+                    placeholder="Pra que foi usado (ex: Adubacao do talhao 2)"
+                    value={movFinalidade}
+                    onChange={(e) => setMovFinalidade(e.target.value)}
+                  />
+                  <select
+                    className="input-field"
+                    value={movTalhaoId}
+                    onChange={(e) => setMovTalhaoId(e.target.value ? Number(e.target.value) : "")}
+                  >
+                    <option value="">Talhao (opcional)</option>
+                    {talhoes.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.nome}
+                      </option>
+                    ))}
+                  </select>
                 </>
               )}
               <input

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-documentos";
+import "@/lib/db-documentos-tipos";
 import { ehAdminLogado } from "@/lib/auth-helpers";
 
 export async function PATCH(

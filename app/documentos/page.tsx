@@ -34,6 +34,11 @@ const TIPOS: { valor: string; rotulo: string; icone: string }[] = [
   { valor: "licenca", rotulo: "Licença", icone: "📋" },
   { valor: "seguro", rotulo: "Seguro de máquina", icone: "🚜" },
   { valor: "cnh", rotulo: "CNH", icone: "🪪" },
+  { valor: "nota_fiscal", rotulo: "Nota fiscal", icone: "🧾" },
+  { valor: "contrato", rotulo: "Contrato", icone: "📝" },
+  { valor: "car", rotulo: "CAR (Cadastro Ambiental)", icone: "🌳" },
+  { valor: "receituario", rotulo: "Receituário agronômico", icone: "🧪" },
+  { valor: "certidao", rotulo: "Certidão / regularização", icone: "✅" },
   { valor: "outro", rotulo: "Outro", icone: "📄" },
 ];
 
@@ -311,21 +316,13 @@ export default function DocumentosPage() {
             <div className="space-y-3">
               <div>
                 <label className="mb-1 block text-xs font-medium text-neutral-500">Tipo</label>
-                <div className="grid grid-cols-2 gap-2">
+                <select className="input-field" value={tipo} onChange={(e) => setTipo(e.target.value)}>
                   {TIPOS.map((t) => (
-                    <button
-                      key={t.valor}
-                      onClick={() => setTipo(t.valor)}
-                      className={`rounded-xl border py-2 text-sm font-medium transition ${
-                        tipo === t.valor
-                          ? "border-brand-600 bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300"
-                          : "border-neutral-300 text-neutral-500 dark:border-neutral-700"
-                      }`}
-                    >
+                    <option key={t.valor} value={t.valor}>
                       {t.icone} {t.rotulo}
-                    </button>
+                    </option>
                   ))}
-                </div>
+                </select>
               </div>
 
               <div>

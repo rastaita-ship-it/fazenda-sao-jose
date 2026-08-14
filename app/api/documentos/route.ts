@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-documentos";
+import "@/lib/db-documentos-tipos";
 import { ehAdminLogado } from "@/lib/auth-helpers";
 
 export async function GET(req: NextRequest) {
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
   if (!tipo || !titulo) {
     return NextResponse.json({ error: "Campos obrigatorios: tipo, titulo" }, { status: 400 });
   }
-  if (!["licenca", "seguro", "cnh", "outro"].includes(tipo)) {
+  if (!["licenca", "seguro", "cnh", "nota_fiscal", "contrato", "car", "receituario", "certidao", "outro"].includes(tipo)) {
     return NextResponse.json({ error: "tipo invalido" }, { status: 400 });
   }
 

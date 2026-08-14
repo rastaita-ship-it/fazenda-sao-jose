@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-documentos";
+import "@/lib/db-documentos-tipos";
 import { pastaUpload, parseIdObrigatorio, caminhoDeUploadSeguro, arquivoDentroDoLimite } from "@/lib/uploads";
 import { ehAdminLogado } from "@/lib/auth-helpers";
 import fs from "fs";

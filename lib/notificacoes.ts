@@ -3,6 +3,7 @@ import { db } from "./db";
 import "./db-notificacoes";
 import "./db-manejo";
 import "./db-documentos";
+import "./db-documentos-tipos";
 import "./db-financiamentos";
 import "./db-animais";
 

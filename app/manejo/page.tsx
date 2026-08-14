@@ -37,6 +37,13 @@ interface AtividadePadrao {
   mes_sugerido: number | null;
 }
 
+interface ProdutoProducao {
+  id: number;
+  produto: string;
+  setor_id: number | null;
+  unidade: string;
+}
+
 interface GrupoAtividade {
   grupo_id: string;
   atividade_nome: string;
@@ -149,6 +156,9 @@ export default function ManejoPage() {
   const [fotoConclusao, setFotoConclusao] = useState<File | null>(null);
   const [previewConclusao, setPreviewConclusao] = useState<string | null>(null);
   const [enviandoConclusao, setEnviandoConclusao] = useState(false);
+  const [produtosProducao, setProdutosProducao] = useState<ProdutoProducao[]>([]);
+  const [colheitaProdutoId, setColheitaProdutoId] = useState<number | "">("");
+  const [colheitaQuantidade, setColheitaQuantidade] = useState("");
 
   function alternarGrupo(chave: string) {
     setGruposAbertos((atual) => {
@@ -172,6 +182,10 @@ export default function ManejoPage() {
     fetch("/api/employees")
       .then((r) => r.json())
       .then(setFuncionarios);
+    fetch("/api/estoque-producao")
+      .then((r) => r.json())
+      .then(setProdutosProducao)
+      .catch(() => {});
   }, []);
 
   function carregarManejos() {
@@ -203,6 +217,8 @@ export default function ManejoPage() {
     setConcluindoId(id);
     setFotoConclusao(null);
     setPreviewConclusao(null);
+    setColheitaProdutoId("");
+    setColheitaQuantidade("");
   }
 
   function selecionarFotoConclusao(arquivo: File) {
@@ -228,9 +244,25 @@ export default function ManejoPage() {
         await fetch("/api/manejos/upload", { method: "POST", body: formData });
       }
 
+      if (colheitaProdutoId && colheitaQuantidade) {
+        await fetch("/api/estoque-producao/movimentacao", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            produto_id: colheitaProdutoId,
+            tipo: "entrada",
+            quantidade: Number(colheitaQuantidade.replace(",", ".")),
+            data: hoje,
+            descricao: "Colheita - manejo concluido",
+          }),
+        });
+      }
+
       setConcluindoId(null);
       setFotoConclusao(null);
       setPreviewConclusao(null);
+      setColheitaProdutoId("");
+      setColheitaQuantidade("");
       carregarManejos();
     } finally {
       setEnviandoConclusao(false);
@@ -636,8 +668,14 @@ export default function ManejoPage() {
         </div>
       )}
 
-      {concluindoId && (
-        <div className="fixed inset-0 z-50 flex items-end bg-black/40 sm:items-center sm:justify-center">
+      {concluindoId && (() => {
+        const manejoConcluindo = manejos.find((m) => m.id === concluindoId);
+        const ehColheita = manejoConcluindo?.atividade_nome.toLowerCase().includes("colheita") ?? false;
+        const produtosDoSetor = produtosProducao.filter(
+          (p) => p.setor_id == null || p.setor_id === manejoConcluindo?.setor_id
+        );
+        return (
+      <div className="fixed inset-0 z-50 flex items-end bg-black/40 sm:items-center sm:justify-center">
           <div className="w-full rounded-t-3xl bg-white p-5 dark:bg-neutral-900 sm:max-w-md sm:rounded-3xl">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-bold">Concluir atividade</h2>
@@ -670,6 +708,42 @@ export default function ManejoPage() {
                 className="block w-full text-xs text-neutral-500"
               />
 
+              {ehColheita && (
+                <div className="rounded-2xl border border-neutral-200 p-3 dark:border-neutral-700">
+                  <p className="mb-2 text-xs font-medium text-neutral-500">
+                    Colheita — preencha pra somar direto no estoque de produção (opcional)
+                  </p>
+                  {produtosDoSetor.length === 0 ? (
+                    <p className="text-xs text-neutral-400">
+                      Nenhum produto cadastrado ainda pra esse setor. Cadastre em Estoque › Produção pra poder
+                      registrar a colheita aqui.
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      <select
+                        className="input-field"
+                        value={colheitaProdutoId}
+                        onChange={(e) => setColheitaProdutoId(e.target.value ? Number(e.target.value) : "")}
+                      >
+                        <option value="">Produto colhido</option>
+                        {produtosDoSetor.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.produto} ({p.unidade})
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        className="input-field"
+                        inputMode="decimal"
+                        placeholder="Quantidade colhida"
+                        value={colheitaQuantidade}
+                        onChange={(e) => setColheitaQuantidade(e.target.value)}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
               <button
                 className="btn-primary w-full"
                 disabled={enviandoConclusao}
@@ -679,8 +753,9 @@ export default function ManejoPage() {
               </button>
             </div>
           </div>
-        </div>
-      )}
+      </div>
+        );
+      })()}
     </>
   );
 }
