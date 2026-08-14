@@ -42,6 +42,7 @@ export default function QuickAddButtons({ onSaved }: { onSaved: () => void }) {
   const [classificacaoCusto, setClassificacaoCusto] = useState<"fixo" | "variavel" | "">("");
   const [categoria, setCategoria] = useState("");
   const [categoriaCustom, setCategoriaCustom] = useState("");
+  const [recibo, setRecibo] = useState<File | null>(null);
 
   useEffect(() => {
     if (aberto && setores.length === 0) {
@@ -81,6 +82,7 @@ export default function QuickAddButtons({ onSaved }: { onSaved: () => void }) {
     setCategoria("");
     setCategoriaCustom("");
     setTalhaoId("");
+    setRecibo(null);
   }
 
   async function salvar() {
@@ -88,7 +90,7 @@ export default function QuickAddButtons({ onSaved }: { onSaved: () => void }) {
     setSalvando(true);
     try {
       const categoriaFinal = categoria === "outra" ? categoriaCustom : categoria;
-      await fetch("/api/transactions", {
+      const res = await fetch("/api/transactions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -103,6 +105,15 @@ export default function QuickAddButtons({ onSaved }: { onSaved: () => void }) {
           talhao_id: talhaoId || null,
         }),
       });
+
+      if (res.ok && recibo) {
+        const novaTransacao = await res.json();
+        const formData = new FormData();
+        formData.append("arquivo", recibo);
+        formData.append("transacao_id", String(novaTransacao.id));
+        await fetch("/api/transactions/upload", { method: "POST", body: formData }).catch(() => {});
+      }
+
       fechar();
       onSaved();
     } finally {
@@ -312,6 +323,20 @@ export default function QuickAddButtons({ onSaved }: { onSaved: () => void }) {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-neutral-500">
+                  Foto do recibo/nota (opcional)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  capture="environment"
+                  onChange={(e) => setRecibo(e.target.files?.[0] ?? null)}
+                  className="block w-full text-xs text-neutral-500"
+                />
+                {recibo && <p className="mt-1 text-xs text-brand-600 dark:text-brand-400">{recibo.name}</p>}
               </div>
 
               <button
