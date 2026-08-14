@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ehAdminLogado } from "@/lib/auth-helpers";
+import { arquivoDentroDoLimite } from "@/lib/uploads";
+import { estaBloqueado, registrarTentativaFalha } from "@/lib/rate-limit";
+
+// Cada chamada custa uma requisicao paga na API da Claude — limite mais
+// generoso que o de login (nao e tentativa de invasao, e uso legitimo em
+// lote), mas ainda protege contra custo descontrolado por bug no cliente
+// ou uso indevido de uma sessao admin.
+const MAX_LEITURAS = 15;
+const JANELA_LEITURAS_MS = 10 * 60 * 1000;
 
 const SYSTEM_PROMPT = `Voce le recibos e notas fiscais brasileiros para lancamento no financeiro de uma fazenda. Responda APENAS com um JSON valido, sem nenhum texto antes ou depois, exatamente neste formato:
 {"valor": <numero ou null>, "data": "<YYYY-MM-DD ou null>", "descricao": "<string curta ou null>"}
@@ -15,11 +24,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Apenas administradores." }, { status: 403 });
   }
 
+  const funcionarioId = req.cookies.get("funcionario_id")?.value ?? "desconhecido";
+  const chaveLimite = `ocr-recibo:${funcionarioId}`;
+  if (estaBloqueado(chaveLimite)) {
+    return NextResponse.json(
+      { error: "Muitas leituras de recibo em pouco tempo. Aguarde alguns minutos e tente de novo." },
+      { status: 429 }
+    );
+  }
+
   const formData = await req.formData();
   const arquivo = formData.get("arquivo") as File | null;
   if (!arquivo) {
     return NextResponse.json({ error: "arquivo e obrigatorio" }, { status: 400 });
   }
+  if (!arquivoDentroDoLimite(arquivo)) {
+    return NextResponse.json({ error: "Arquivo muito grande (limite de 10MB)." }, { status: 400 });
+  }
+
+  registrarTentativaFalha(chaveLimite, MAX_LEITURAS, JANELA_LEITURAS_MS);
 
   const chave = process.env.ANTHROPIC_API_KEY;
   if (!chave) {
