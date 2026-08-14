@@ -43,6 +43,7 @@ export default function QuickAddButtons({ onSaved }: { onSaved: () => void }) {
   const [categoria, setCategoria] = useState("");
   const [categoriaCustom, setCategoriaCustom] = useState("");
   const [recibo, setRecibo] = useState<File | null>(null);
+  const [lendoRecibo, setLendoRecibo] = useState(false);
 
   useEffect(() => {
     if (aberto && setores.length === 0) {
@@ -83,6 +84,27 @@ export default function QuickAddButtons({ onSaved }: { onSaved: () => void }) {
     setCategoriaCustom("");
     setTalhaoId("");
     setRecibo(null);
+    setLendoRecibo(false);
+  }
+
+  async function selecionarRecibo(arquivo: File) {
+    setRecibo(arquivo);
+    setLendoRecibo(true);
+    try {
+      const formData = new FormData();
+      formData.append("arquivo", arquivo);
+      const res = await fetch("/api/transactions/ocr", { method: "POST", body: formData });
+      if (res.ok) {
+        const dados = await res.json();
+        if (dados.valor != null) setValor(String(dados.valor).replace(".", ","));
+        if (dados.data) setData(dados.data);
+        if (dados.descricao) setDescricao(dados.descricao);
+      }
+    } catch {
+      // Falha silenciosa — o usuario ainda pode preencher tudo na mao.
+    } finally {
+      setLendoRecibo(false);
+    }
   }
 
   async function salvar() {
@@ -327,24 +349,30 @@ export default function QuickAddButtons({ onSaved }: { onSaved: () => void }) {
 
               <div>
                 <label className="mb-1 block text-xs font-medium text-neutral-500">
-                  Foto do recibo/nota (opcional)
+                  Foto do recibo/nota (opcional) — tenta preencher sozinho
                 </label>
                 <input
                   type="file"
                   accept="image/*,application/pdf"
                   capture="environment"
-                  onChange={(e) => setRecibo(e.target.files?.[0] ?? null)}
+                  onChange={(e) => {
+                    const arquivo = e.target.files?.[0];
+                    if (arquivo) selecionarRecibo(arquivo);
+                  }}
                   className="block w-full text-xs text-neutral-500"
                 />
-                {recibo && <p className="mt-1 text-xs text-brand-600 dark:text-brand-400">{recibo.name}</p>}
+                {lendoRecibo && <p className="mt-1 text-xs text-neutral-400">Lendo recibo...</p>}
+                {!lendoRecibo && recibo && (
+                  <p className="mt-1 text-xs text-brand-600 dark:text-brand-400">{recibo.name}</p>
+                )}
               </div>
 
               <button
                 className={tipo === "receita" ? "btn-primary w-full" : "btn-danger w-full"}
-                disabled={salvando}
+                disabled={salvando || lendoRecibo}
                 onClick={salvar}
               >
-                {salvando ? "Salvando..." : "Salvar lancamento"}
+                {salvando ? "Salvando..." : lendoRecibo ? "Lendo recibo..." : "Salvar lancamento"}
               </button>
             </div>
           </div>
