@@ -16,8 +16,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Apenas administradores." }, { status: 403 });
   }
 
+  // "Oficina e Manutencao" e um setor de custo (auto-criado pra abrigar
+  // despesa de combustivel/manutencao de maquina), nao um setor produtivo
+  // — nunca vai ter safra, entao nem faz sentido entrar nessa projecao.
   const setores = db
-    .prepare("SELECT id, nome, cor, area_hectares FROM setores WHERE ativo = 1")
+    .prepare("SELECT id, nome, cor, area_hectares FROM setores WHERE ativo = 1 AND nome != 'Oficina e Manutencao'")
     .all() as SetorRow[];
 
   const resultado = setores.map((setor) => {
