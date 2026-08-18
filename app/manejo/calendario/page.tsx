@@ -52,6 +52,7 @@ export default function CalendarioPage() {
   );
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- precisa mostrar loading a cada troca de mes/ano
     setCarregando(true);
     fetch(`/api/manejos/calendario?ano=${ano}&mes=${mes}`)
       .then((r) => r.json())

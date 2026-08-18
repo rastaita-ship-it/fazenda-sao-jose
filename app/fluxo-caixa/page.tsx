@@ -44,12 +44,18 @@ export default function FluxoCaixaPage() {
   }
 
   useEffect(() => {
-    carregar();
+    // carregando ja nasce true; buscar direto aqui evita repetir os sets
+    // sincronos que carregar() faz (usada tambem no recarregar manual).
+    fetch("/api/transactions")
+      .then((r) => r.json())
+      .then(setTransacoes)
+      .finally(() => setCarregando(false));
     fetch("/api/sectors").then((r) => r.json()).then(setSetores);
   }, []);
 
   useEffect(() => {
     if (!editSetorId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- precisa limpar a lista ao trocar/zerar o setor
       setTalhoesDoSetor([]);
       return;
     }

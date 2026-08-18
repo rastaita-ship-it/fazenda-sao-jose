@@ -54,6 +54,7 @@ export default function QuickAddButtons({ onSaved }: { onSaved: () => void }) {
   }, [aberto, setores.length]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- precisa zerar o talhao a cada troca de setor
     setTalhaoId("");
     if (!setorId) {
       setTalhoes([]);

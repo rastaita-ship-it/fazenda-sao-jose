@@ -62,7 +62,12 @@ export default function EstoqueInsumosPage() {
   }
 
   useEffect(() => {
-    carregar();
+    // carregando ja nasce true; buscar direto aqui evita repetir os sets
+    // sincronos que carregar() faz (usada tambem no recarregar manual).
+    fetch("/api/estoque-insumos")
+      .then((r) => r.json())
+      .then(setItens)
+      .finally(() => setCarregando(false));
   }, []);
 
   async function salvarNovo() {

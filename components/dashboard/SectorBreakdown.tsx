@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { ResumoFinanceiro } from "@/lib/types";
 
 const CORES_PADRAO = ["#6f4a25", "#3f8f34", "#8cc97f", "#2563eb", "#dc2626", "#d97706", "#7c3aed", "#0891b2"];
@@ -125,12 +126,12 @@ export default function SectorBreakdown({
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-base font-semibold">Desempenho por setor</h2>
         <div className="flex items-center gap-3">
-          <a href="/animais" className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+          <Link href="/animais" className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
             Animais →
-          </a>
-          <a href="/talhoes" className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+          </Link>
+          <Link href="/talhoes" className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
             Talhões →
-          </a>
+          </Link>
           <button onClick={abrirNovo} className="text-xs font-medium text-brand-600 dark:text-brand-400">
             + Novo
           </button>

@@ -33,7 +33,12 @@ export default function MuralPage() {
   }
 
   useEffect(() => {
-    carregar();
+    // carregando ja nasce true; buscar direto aqui evita repetir os sets
+    // sincronos que carregar() faz (usada tambem no recarregar manual).
+    fetch("/api/avisos")
+      .then((r) => r.json())
+      .then(setAvisos)
+      .finally(() => setCarregando(false));
   }, []);
 
   async function publicar() {

@@ -54,6 +54,7 @@ function useClimaAtual() {
     try {
       const cache = JSON.parse(localStorage.getItem(CHAVE_CACHE_CLIMA) || "null");
       if (cache && Date.now() - cache.salvoEm < VALIDADE_CACHE_CLIMA_MS) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- leitura de cache local so pode rodar no client
         setClima(cache.clima);
         return;
       }
@@ -156,8 +157,13 @@ function PaginaAdmin() {
   }, []);
 
   useEffect(() => {
-    carregarResumo();
-  }, [carregarResumo]);
+    // carregando ja nasce true; buscar direto aqui evita repetir os sets
+    // sincronos que carregarResumo() faz (usada tambem no recarregar manual).
+    fetch("/api/summary")
+      .then((r) => r.json())
+      .then(setResumo)
+      .finally(() => setCarregando(false));
+  }, []);
 
   useEffect(() => {
     fetch("/api/employees")

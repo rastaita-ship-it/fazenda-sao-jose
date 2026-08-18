@@ -100,7 +100,12 @@ export default function DocumentosPage() {
   }
 
   useEffect(() => {
-    carregar();
+    // carregando ja nasce true; buscar direto aqui evita repetir os sets
+    // sincronos que carregar() faz (usada tambem no recarregar manual).
+    fetch("/api/documentos")
+      .then((r) => r.json())
+      .then(setDocumentos)
+      .finally(() => setCarregando(false));
     fetch("/api/patrimonio").then((r) => r.json()).then(setPatrimonios);
     fetch("/api/employees").then((r) => r.json()).then(setFuncionarios);
   }, []);

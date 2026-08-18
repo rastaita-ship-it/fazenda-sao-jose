@@ -29,6 +29,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let cancelado = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- precisa voltar pro estado "carregando" a cada troca de rota
     setUsuario(undefined);
     fetch("/api/auth/me")
       .then((r) => r.json())

@@ -201,7 +201,9 @@ export default function ManejoPage() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- precisa mostrar loading a cada troca de setor/mes
     carregarManejos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setorSelecionado, mes]);
 
   const setorAtual = setores.find((s) => s.id === setorSelecionado);

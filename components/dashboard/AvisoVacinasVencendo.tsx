@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 interface VacinaVencendo {
   id: number;
@@ -33,7 +34,7 @@ export default function AvisoVacinasVencendo() {
   const temVencida = itens.some((v) => diasRestantes(v.proxima_dose) < 0);
 
   return (
-    <a
+    <Link
       href="/animais"
       className={`card block ${temVencida ? "border-danger bg-danger/5" : "border-warning bg-warning/5"}`}
     >
@@ -56,6 +57,6 @@ export default function AvisoVacinasVencendo() {
         })}
         {itens.length > 3 && <p className="text-xs text-neutral-400">+{itens.length - 3} outras</p>}
       </div>
-    </a>
+    </Link>
   );
 }

@@ -89,6 +89,7 @@ export default function AnimaisPage() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- precisa mostrar loading a cada troca de filtro de status
     carregar(statusFiltro);
   }, [statusFiltro]);
 
@@ -98,6 +99,7 @@ export default function AnimaisPage() {
 
   useEffect(() => {
     if (!setorId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- precisa limpar talhao/lista a cada troca/zerada de setor
       setTalhoes([]);
       setTalhaoId("");
       return;
@@ -189,7 +191,7 @@ export default function AnimaisPage() {
           </p>
           <p>
             Aftosa: normalmente maio e novembro. Brucelose: fêmeas de 3 a 8 meses. As datas exatas variam por
-            estado — confirme com a Adab/IDF local. Cadastre a "próxima dose" na vacina do animal para receber
+            estado — confirme com a Adab/IDF local. Cadastre a &quot;próxima dose&quot; na vacina do animal para receber
             aviso automático aqui no app.
           </p>
         </div>

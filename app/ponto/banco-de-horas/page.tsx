@@ -46,6 +46,7 @@ export default function BancoDeHorasPage() {
 
   useEffect(() => {
     if (!selecionadoId) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- precisa mostrar loading a cada troca de funcionario
     setCarregando(true);
     fetch(`/api/timeclock/summary?funcionario_id=${selecionadoId}`)
       .then((r) => r.json())

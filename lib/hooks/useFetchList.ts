@@ -25,7 +25,9 @@ export function useFetchList<T>(
   const [erro, setErro] = useState(false);
   const toast = useToast();
   const fetcherRef = useRef(fetcher);
-  fetcherRef.current = fetcher;
+  useEffect(() => {
+    fetcherRef.current = fetcher;
+  });
 
   const carregar = useCallback(() => {
     setCarregando(true);
@@ -42,7 +44,16 @@ export function useFetchList<T>(
   }, [mensagemErro]);
 
   useEffect(() => {
-    carregar();
+    // carregando/erro ja nascem em (true, false); chamar carregar() aqui so
+    // pra buscar os dados, sem repetir os sets que o mount ja cobre.
+    fetcherRef
+      .current()
+      .then((resultado) => setDados(resultado))
+      .catch(() => {
+        setErro(true);
+        toast.erro(mensagemErro);
+      })
+      .finally(() => setCarregando(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

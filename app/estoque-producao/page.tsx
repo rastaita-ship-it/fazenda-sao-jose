@@ -52,7 +52,12 @@ export default function EstoqueProducaoPage() {
   }
 
   useEffect(() => {
-    carregar();
+    // carregando ja nasce true; buscar direto aqui evita repetir os sets
+    // sincronos que carregar() faz (usada tambem no recarregar manual).
+    fetch("/api/estoque-producao")
+      .then((r) => r.json())
+      .then(setItens)
+      .finally(() => setCarregando(false));
     fetch("/api/sectors").then((r) => r.json()).then(setSetores);
   }, []);
 

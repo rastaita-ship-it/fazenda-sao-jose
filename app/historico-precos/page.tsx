@@ -54,6 +54,7 @@ function HistoricoPrecosConteudo() {
 
   useEffect(() => {
     if (!insumoId) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- precisa mostrar loading a cada troca de insumo
     setCarregando(true);
     fetch(`/api/estoque-insumos/historico-precos?insumo_id=${insumoId}`)
       .then((r) => r.json())

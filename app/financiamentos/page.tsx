@@ -68,7 +68,13 @@ export default function FinanciamentosPage() {
   }
 
   useEffect(() => {
-    carregar();
+    // carregando ja nasce true; buscar direto aqui evita repetir os sets
+    // sincronos que carregar() faz (usada tambem no recarregar manual).
+    fetch("/api/financiamentos")
+      .then((r) => r.json())
+      .then(setFinanciamentos)
+      .catch(() => toast.erro("Nao foi possivel carregar os financiamentos."))
+      .finally(() => setCarregando(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

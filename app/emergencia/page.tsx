@@ -46,7 +46,12 @@ export default function EmergenciaPage() {
   }
 
   useEffect(() => {
-    carregar();
+    // carregando ja nasce true; buscar direto aqui evita repetir os sets
+    // sincronos que carregar() faz (usada tambem no recarregar manual).
+    fetch("/api/contatos-emergencia")
+      .then((r) => r.json())
+      .then(setContatos)
+      .finally(() => setCarregando(false));
   }, []);
 
   async function salvar() {

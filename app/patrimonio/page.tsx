@@ -133,7 +133,12 @@ export default function PatrimonioPage() {
   }
 
   useEffect(() => {
-    carregar();
+    // carregando ja nasce true; buscar direto aqui evita repetir os sets
+    // sincronos que carregar() faz (usada tambem no recarregar manual).
+    fetch("/api/patrimonio")
+      .then((r) => r.json())
+      .then(setItens)
+      .finally(() => setCarregando(false));
   }, []);
 
   function aoTrocarTipo(novoTipo: string) {

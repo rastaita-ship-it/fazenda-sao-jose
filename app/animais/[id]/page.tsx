@@ -128,6 +128,7 @@ export default function FichaAnimalPage() {
   }, [id]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- precisa mostrar loading a cada troca de id na rota
     if (id) carregar();
   }, [id, carregar]);
 

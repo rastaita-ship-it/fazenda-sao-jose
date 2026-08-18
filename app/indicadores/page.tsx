@@ -54,7 +54,9 @@ export default function IndicadoresPage() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- precisa mostrar loading a cada troca de mes/ano
     carregar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mes, ano]);
 
   function mudarMes(delta: number) {

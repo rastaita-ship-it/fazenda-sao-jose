@@ -55,6 +55,7 @@ export default function GaleriaPage() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- precisa mostrar loading a cada troca de filtro
     carregar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtro]);

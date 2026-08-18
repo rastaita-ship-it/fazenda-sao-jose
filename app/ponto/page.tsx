@@ -155,6 +155,7 @@ export default function PontoPage() {
     sincronizarFilaOffline();
     window.addEventListener("online", sincronizarFilaOffline);
     return () => window.removeEventListener("online", sincronizarFilaOffline);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function iniciarBater(funcionarioId: number) {

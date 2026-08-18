@@ -106,7 +106,17 @@ export default function EstoquePage() {
   }
 
   useEffect(() => {
-    carregar();
+    // carregando ja nasce true; buscar direto aqui evita repetir os sets
+    // sincronos que carregar() faz (usada tambem no recarregar manual).
+    Promise.all([
+      fetch("/api/estoque-insumos").then((r) => r.json()),
+      fetch("/api/estoque-producao").then((r) => r.json()),
+    ])
+      .then(([i, p]) => {
+        setInsumos(i);
+        setProdutos(p);
+      })
+      .finally(() => setCarregando(false));
     fetch("/api/sectors").then((r) => r.json()).then(setSetores);
     fetch("/api/employees").then((r) => r.json()).then(setFuncionarios);
     fetch("/api/talhoes").then((r) => r.json()).then(setTalhoes);

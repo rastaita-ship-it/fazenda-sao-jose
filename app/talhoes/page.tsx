@@ -70,7 +70,17 @@ export default function TalhoesPage() {
   }
 
   useEffect(() => {
-    carregar();
+    // carregando ja nasce true; buscar direto aqui evita repetir os sets
+    // sincronos que carregar() faz (usada tambem no recarregar manual).
+    Promise.all([
+      fetch("/api/talhoes/resumo").then((r) => r.json()),
+      fetch("/api/sectors").then((r) => r.json()),
+    ])
+      .then(([resumo, setoresData]) => {
+        setTalhoes(resumo);
+        setSetores(setoresData);
+      })
+      .finally(() => setCarregando(false));
   }, []);
 
   function abrirNovo(setorPreSelecionado?: number) {

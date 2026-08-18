@@ -111,8 +111,9 @@ export default function ClimaPage() {
     dia: formatarDiaCurto(r.data),
     mm: r.mm,
   }));
+  const [agora] = useState(() => Date.now());
   const totalUltimos30Dias = registrosChuva
-    .filter((r) => r.data >= new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10))
+    .filter((r) => r.data >= new Date(agora - 30 * 86400000).toISOString().slice(0, 10))
     .reduce((soma, r) => soma + r.mm, 0);
 
   const alertaGeada = previsoes.length > 0 && previsoes[0].tempMin <= 3;

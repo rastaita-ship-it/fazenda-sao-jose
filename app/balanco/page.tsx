@@ -40,6 +40,7 @@ export default function BalancoPage() {
   const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- precisa mostrar loading a cada troca de mes/ano
     setCarregando(true);
     const from = `${ano}-${String(mes).padStart(2, "0")}-01`;
     const to = `${ano}-${String(mes).padStart(2, "0")}-31`;
