@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "db:seed": "node ./lib/seed.js",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -29,6 +29,8 @@
     "@types/web-push": "^3.6.4",
     "@vitejs/plugin-react": "^6.0.5",
     "autoprefixer": "^10.4.19",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.1",
     "jsdom": "^30.0.1",
     "postcss": "^8.4.39",
     "tailwindcss": "^3.4.4",
