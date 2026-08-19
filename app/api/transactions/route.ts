@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
     params.push(to);
   }
 
-  query += " ORDER BY t.data DESC, t.id DESC LIMIT 200";
+  query += " ORDER BY t.data DESC, t.id DESC";
 
   const rows = db.prepare(query).all(...params) as TransacaoComSetor[];
   return NextResponse.json(rows);
