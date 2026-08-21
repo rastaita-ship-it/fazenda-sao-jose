@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import "@/lib/db-area";
 import "@/lib/db-estoque";
 import { ehAdminLogado } from "@/lib/auth-helpers";
+import { SETOR_INVESTIMENTOS_NOME } from "@/lib/financeiro";
 
 interface SetorRow {
   id: number;
@@ -24,8 +25,8 @@ export async function GET(req: NextRequest) {
   const to = searchParams.get("to") ?? defaultTo;
 
   const setores = db
-    .prepare("SELECT id, nome, cor, area_hectares FROM setores WHERE ativo = 1")
-    .all() as SetorRow[];
+    .prepare("SELECT id, nome, cor, area_hectares FROM setores WHERE ativo = 1 AND nome != ?")
+    .all(SETOR_INVESTIMENTOS_NOME) as SetorRow[];
 
   const resultado = setores.map((setor) => {
     const receitas = db

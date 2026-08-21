@@ -104,6 +104,10 @@ function runMigrations(db: Database.Database) {
     insert.run("Cafe", "cafe", "#6f4a25");
     insert.run("Gado", "gado", "#3f8f34");
     insert.run("Ovelhas", "ovelhas", "#8cc97f");
+    // Nao e um setor produtivo: compra de imovel, aplicacao financeira e
+    // aporte/retirada de capital do proprietario nao entram no lucro
+    // operacional da fazenda (ver SETOR_INVESTIMENTOS_NOME em lib/financeiro.ts).
+    insert.run("Investimentos e Aportes", "outra_cultura", "#7c3aed");
   });
   seed();
 }

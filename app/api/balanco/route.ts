@@ -5,6 +5,7 @@ import "@/lib/db-salario";
 import "@/lib/db-patrimonio";
 import { ehAdminLogado } from "@/lib/auth-helpers";
 import "@/lib/db-ponto";
+import { SETOR_INVESTIMENTOS_NOME } from "@/lib/financeiro";
 
 function diasNoPeriodo(from: string, to: string) {
   const inicio = new Date(from + "T12:00:00");
@@ -26,29 +27,31 @@ export async function GET(req: NextRequest) {
   const to = searchParams.get("to") ?? defaultTo;
   const dias = diasNoPeriodo(from, to);
 
+  const excluirSetor = "AND setor_id != (SELECT id FROM setores WHERE nome = ?)";
+
   const receitas = db
     .prepare(
-      "SELECT COALESCE(SUM(valor), 0) AS total FROM transacoes WHERE tipo = 'receita' AND status = 'pago' AND data BETWEEN ? AND ?"
+      `SELECT COALESCE(SUM(valor), 0) AS total FROM transacoes WHERE tipo = 'receita' AND status = 'pago' AND data BETWEEN ? AND ? ${excluirSetor}`
     )
-    .get(from, to) as { total: number };
+    .get(from, to, SETOR_INVESTIMENTOS_NOME) as { total: number };
 
   const custoFixoLancado = db
     .prepare(
-      "SELECT COALESCE(SUM(valor), 0) AS total FROM transacoes WHERE tipo = 'despesa' AND classificacao_custo = 'fixo' AND status = 'pago' AND data BETWEEN ? AND ?"
+      `SELECT COALESCE(SUM(valor), 0) AS total FROM transacoes WHERE tipo = 'despesa' AND classificacao_custo = 'fixo' AND status = 'pago' AND data BETWEEN ? AND ? ${excluirSetor}`
     )
-    .get(from, to) as { total: number };
+    .get(from, to, SETOR_INVESTIMENTOS_NOME) as { total: number };
 
   const custoVariavelLancado = db
     .prepare(
-      "SELECT COALESCE(SUM(valor), 0) AS total FROM transacoes WHERE tipo = 'despesa' AND classificacao_custo = 'variavel' AND status = 'pago' AND data BETWEEN ? AND ?"
+      `SELECT COALESCE(SUM(valor), 0) AS total FROM transacoes WHERE tipo = 'despesa' AND classificacao_custo = 'variavel' AND status = 'pago' AND data BETWEEN ? AND ? ${excluirSetor}`
     )
-    .get(from, to) as { total: number };
+    .get(from, to, SETOR_INVESTIMENTOS_NOME) as { total: number };
 
   const naoClassificado = db
     .prepare(
-      "SELECT COALESCE(SUM(valor), 0) AS total FROM transacoes WHERE tipo = 'despesa' AND classificacao_custo IS NULL AND status = 'pago' AND data BETWEEN ? AND ?"
+      `SELECT COALESCE(SUM(valor), 0) AS total FROM transacoes WHERE tipo = 'despesa' AND classificacao_custo IS NULL AND status = 'pago' AND data BETWEEN ? AND ? ${excluirSetor}`
     )
-    .get(from, to) as { total: number };
+    .get(from, to, SETOR_INVESTIMENTOS_NOME) as { total: number };
 
   const salarios = db
     .prepare(

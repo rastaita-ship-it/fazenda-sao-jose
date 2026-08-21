@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import "@/lib/db-area";
 import "@/lib/db-estoque";
 import { ehAdminLogado } from "@/lib/auth-helpers";
+import { SETOR_INVESTIMENTOS_NOME } from "@/lib/financeiro";
 
 interface SetorRow {
   id: number;
@@ -19,9 +20,12 @@ export async function GET(req: NextRequest) {
   // "Oficina e Manutencao" e um setor de custo (auto-criado pra abrigar
   // despesa de combustivel/manutencao de maquina), nao um setor produtivo
   // — nunca vai ter safra, entao nem faz sentido entrar nessa projecao.
+  // Investimentos e Aportes e dinheiro fora da operacao da fazenda, mesma logica.
   const setores = db
-    .prepare("SELECT id, nome, cor, area_hectares FROM setores WHERE ativo = 1 AND nome != 'Oficina e Manutencao'")
-    .all() as SetorRow[];
+    .prepare(
+      "SELECT id, nome, cor, area_hectares FROM setores WHERE ativo = 1 AND nome != 'Oficina e Manutencao' AND nome != ?"
+    )
+    .all(SETOR_INVESTIMENTOS_NOME) as SetorRow[];
 
   const resultado = setores.map((setor) => {
     const producaoPorAno = db

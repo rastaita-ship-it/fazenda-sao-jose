@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { ResumoFinanceiro } from "@/lib/types";
 import { estaLogado } from "@/lib/auth-helpers";
+import { SETOR_INVESTIMENTOS_NOME } from "@/lib/financeiro";
 
 /**
  * GET /api/summary?from=YYYY-MM-DD&to=YYYY-MM-DD
@@ -30,9 +31,10 @@ export async function GET(req: NextRequest) {
         COALESCE(SUM(CASE WHEN tipo = 'despesa' THEN valor ELSE 0 END), 0) AS totalDespesas
       FROM transacoes
       WHERE status = 'pago' AND data BETWEEN ? AND ?
+        AND setor_id != (SELECT id FROM setores WHERE nome = ?)
     `
     )
-    .get(from, to) as { totalReceitas: number; totalDespesas: number };
+    .get(from, to, SETOR_INVESTIMENTOS_NOME) as { totalReceitas: number; totalDespesas: number };
 
   const porSetorRaw = db
     .prepare(
@@ -46,12 +48,12 @@ export async function GET(req: NextRequest) {
       FROM setores s
       LEFT JOIN transacoes t
         ON t.setor_id = s.id AND t.status = 'pago' AND t.data BETWEEN ? AND ?
-      WHERE s.ativo = 1
+      WHERE s.ativo = 1 AND s.nome != ?
       GROUP BY s.id
       ORDER BY s.id ASC
     `
     )
-    .all(from, to) as {
+    .all(from, to, SETOR_INVESTIMENTOS_NOME) as {
     setor_id: number;
     nome: string;
     cor: string;
