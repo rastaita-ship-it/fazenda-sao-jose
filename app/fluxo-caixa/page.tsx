@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import Header from "@/components/layout/Header";
 import { TransacaoComSetor, Setor, Talhao } from "@/lib/types";
 import { useToast } from "@/components/ui/ToastContext";
@@ -34,6 +35,11 @@ export default function FluxoCaixaPage() {
   const [editRecibo, setEditRecibo] = useState<string | null>(null);
   const [enviandoRecibo, setEnviandoRecibo] = useState(false);
   const [editErro, setEditErro] = useState("");
+
+  const pendentesCategorizacao = useMemo(
+    () => transacoes.filter((t) => t.setor_nome === "Geral/Administrativo").length,
+    [transacoes]
+  );
 
   function carregar() {
     setCarregando(true);
@@ -159,6 +165,14 @@ export default function FluxoCaixaPage() {
     <>
       <Header titulo="Fluxo de Caixa" subtitulo="Ultimos lancamentos" />
       <div className="space-y-2 p-4">
+        {!carregando && pendentesCategorizacao > 0 && (
+          <Link
+            href="/categorizar"
+            className="card block border-warning bg-warning/5 text-sm font-medium text-warning"
+          >
+            {pendentesCategorizacao} lançamento{pendentesCategorizacao > 1 ? "s" : ""} sem setor definido — categorizar →
+          </Link>
+        )}
         {carregando && (
           <div className="card text-center text-sm text-neutral-400">Carregando...</div>
         )}
