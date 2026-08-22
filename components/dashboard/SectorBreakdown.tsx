@@ -144,28 +144,36 @@ export default function SectorBreakdown({
           const pctReceita = total > 0 ? (s.receitas / total) * 100 : 0;
 
           return (
-            <button
-              key={s.setor_id}
-              onClick={() => abrirEdicao(s.setor_id)}
-              className="block w-full text-left"
-            >
-              <div className="mb-1 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: s.cor }} />
-                  <span className="text-sm font-medium">{s.nome}</span>
+            <div key={s.setor_id} className="flex items-center gap-2">
+              <Link href={`/fluxo-caixa?setor_id=${s.setor_id}`} className="block min-w-0 flex-1">
+                <div className="mb-1 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 flex-shrink-0 rounded-full" style={{ backgroundColor: s.cor }} />
+                    <span className="truncate text-sm font-medium">{s.nome}</span>
+                  </div>
+                  <span
+                    className={`flex-shrink-0 text-sm font-semibold ${
+                      positivo ? "text-brand-600 dark:text-brand-400" : "text-danger"
+                    }`}
+                  >
+                    {formatarMoeda(s.saldo)}
+                  </span>
                 </div>
-                <span
-                  className={`text-sm font-semibold ${
-                    positivo ? "text-brand-600 dark:text-brand-400" : "text-danger"
-                  }`}
-                >
-                  {formatarMoeda(s.saldo)}
-                </span>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
-                <div className="h-full bg-brand-500" style={{ width: `${pctReceita}%` }} />
-              </div>
-            </button>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
+                  <div className="h-full bg-brand-500" style={{ width: `${pctReceita}%` }} />
+                </div>
+              </Link>
+              <button
+                onClick={() => abrirEdicao(s.setor_id)}
+                aria-label={`Editar ${s.nome}`}
+                className="flex-shrink-0 rounded-xl p-1.5 text-neutral-400 active:bg-neutral-100 dark:active:bg-neutral-800"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+              </button>
+            </div>
           );
         })}
       </div>

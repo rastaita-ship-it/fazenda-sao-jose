@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import Header from "@/components/layout/Header";
 import { TransacaoComSetor, Setor, Talhao } from "@/lib/types";
 import { useToast } from "@/components/ui/ToastContext";
@@ -16,8 +17,10 @@ const STATUS_STYLES: Record<string, string> = {
   previsto: "bg-neutral-200 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300",
 };
 
-export default function FluxoCaixaPage() {
+function FluxoCaixaConteudo() {
   const toast = useToast();
+  const searchParams = useSearchParams();
+  const setorIdFiltro = searchParams.get("setor_id");
   const [transacoes, setTransacoes] = useState<TransacaoComSetor[]>([]);
   const [setores, setSetores] = useState<Setor[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -41,23 +44,37 @@ export default function FluxoCaixaPage() {
     [transacoes]
   );
 
+  const setorFiltro = setorIdFiltro ? setores.find((s) => s.id === Number(setorIdFiltro)) : undefined;
+  const resumoFiltro = useMemo(
+    () => ({
+      receitas: transacoes.filter((t) => t.tipo === "receita").reduce((soma, t) => soma + t.valor, 0),
+      despesas: transacoes.filter((t) => t.tipo === "despesa").reduce((soma, t) => soma + t.valor, 0),
+    }),
+    [transacoes]
+  );
+
   function carregar() {
     setCarregando(true);
-    fetch("/api/transactions")
+    const url = setorIdFiltro ? `/api/transactions?setor_id=${setorIdFiltro}` : "/api/transactions";
+    fetch(url)
       .then((r) => r.json())
       .then(setTransacoes)
       .finally(() => setCarregando(false));
   }
 
   useEffect(() => {
-    // carregando ja nasce true; buscar direto aqui evita repetir os sets
-    // sincronos que carregar() faz (usada tambem no recarregar manual).
-    fetch("/api/transactions")
+    fetch("/api/sectors").then((r) => r.json()).then(setSetores);
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- precisa recarregar ao trocar o filtro de setor pela URL
+    setCarregando(true);
+    const url = setorIdFiltro ? `/api/transactions?setor_id=${setorIdFiltro}` : "/api/transactions";
+    fetch(url)
       .then((r) => r.json())
       .then(setTransacoes)
       .finally(() => setCarregando(false));
-    fetch("/api/sectors").then((r) => r.json()).then(setSetores);
-  }, []);
+  }, [setorIdFiltro]);
 
   useEffect(() => {
     if (!editSetorId) {
@@ -163,8 +180,33 @@ export default function FluxoCaixaPage() {
 
   return (
     <>
-      <Header titulo="Fluxo de Caixa" subtitulo="Ultimos lancamentos" />
+      <Header
+        titulo="Fluxo de Caixa"
+        subtitulo={setorFiltro ? setorFiltro.nome : "Ultimos lancamentos"}
+      />
       <div className="space-y-2 p-4">
+        {setorFiltro && (
+          <div className="card" style={{ borderColor: setorFiltro.cor }}>
+            <div className="mb-2 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: setorFiltro.cor }} />
+                <span className="text-sm font-semibold">{setorFiltro.nome}</span>
+              </div>
+              <Link href="/fluxo-caixa" className="text-xs text-neutral-400">
+                limpar filtro ✕
+              </Link>
+            </div>
+            <div className="flex gap-4 text-sm">
+              <span className="text-brand-600 dark:text-brand-400">
+                + {formatarMoeda(resumoFiltro.receitas)}
+              </span>
+              <span className="text-danger">- {formatarMoeda(resumoFiltro.despesas)}</span>
+              <span className="font-semibold">
+                = {formatarMoeda(resumoFiltro.receitas - resumoFiltro.despesas)}
+              </span>
+            </div>
+          </div>
+        )}
         {!carregando && pendentesCategorizacao > 0 && (
           <Link
             href="/categorizar"
@@ -394,5 +436,13 @@ export default function FluxoCaixaPage() {
         </div>
       )}
     </>
+  );
+}
+
+export default function FluxoCaixaPage() {
+  return (
+    <Suspense fallback={null}>
+      <FluxoCaixaConteudo />
+    </Suspense>
   );
 }
