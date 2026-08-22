@@ -34,21 +34,46 @@ const MESES = [
 ];
 
 export default function BalancoPage() {
+  const [visao, setVisao] = useState<"mensal" | "anual">("mensal");
   const [mes, setMes] = useState(mesAtual());
   const [ano, setAno] = useState(anoAtual());
   const [balanco, setBalanco] = useState<Balanco | null>(null);
   const [carregando, setCarregando] = useState(true);
+  const [comparativo, setComparativo] = useState<{ ano: number; receitas: number; despesas: number; lucro: number }[]>([]);
+
+  const from = visao === "anual" ? `${ano}-01-01` : `${ano}-${String(mes).padStart(2, "0")}-01`;
+  const to = visao === "anual" ? `${ano}-12-31` : `${ano}-${String(mes).padStart(2, "0")}-31`;
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- precisa mostrar loading a cada troca de mes/ano
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- precisa mostrar loading a cada troca de mes/ano/visao
     setCarregando(true);
-    const from = `${ano}-${String(mes).padStart(2, "0")}-01`;
-    const to = `${ano}-${String(mes).padStart(2, "0")}-31`;
     fetch(`/api/balanco?from=${from}&to=${to}`)
       .then((r) => r.json())
       .then(setBalanco)
       .finally(() => setCarregando(false));
-  }, [mes, ano]);
+  }, [from, to]);
+
+  useEffect(() => {
+    if (visao !== "anual") return;
+    let cancelado = false;
+    Promise.all(
+      [ano - 2, ano - 1, ano].map((anoComparado) =>
+        fetch(`/api/balanco?from=${anoComparado}-01-01&to=${anoComparado}-12-31`)
+          .then((r) => r.json())
+          .then((b: Balanco) => ({
+            ano: anoComparado,
+            receitas: b.receitas,
+            despesas: b.custoTotal,
+            lucro: b.lucro,
+          }))
+      )
+    ).then((linhas) => {
+      if (!cancelado) setComparativo(linhas);
+    });
+    return () => {
+      cancelado = true;
+    };
+  }, [visao, ano]);
 
   function mudarMes(delta: number) {
     let novoMes = mes + delta;
@@ -72,18 +97,37 @@ export default function BalancoPage() {
     <>
       <Header titulo="Balanco Geral" subtitulo="Saude economica da fazenda" />
       <div className="space-y-4 p-4">
+        <div className="flex rounded-2xl border border-neutral-300 p-1 dark:border-neutral-700">
+          <button
+            onClick={() => setVisao("mensal")}
+            className={`flex-1 rounded-xl py-1.5 text-sm font-medium ${
+              visao === "mensal" ? "bg-brand-600 text-white" : "text-neutral-500"
+            }`}
+          >
+            Mensal
+          </button>
+          <button
+            onClick={() => setVisao("anual")}
+            className={`flex-1 rounded-xl py-1.5 text-sm font-medium ${
+              visao === "anual" ? "bg-brand-600 text-white" : "text-neutral-500"
+            }`}
+          >
+            Anual
+          </button>
+        </div>
+
         <div className="flex items-center justify-between">
           <button
-            onClick={() => mudarMes(-1)}
+            onClick={() => (visao === "anual" ? setAno((a) => a - 1) : mudarMes(-1))}
             className="rounded-full border border-neutral-300 px-3 py-1.5 text-sm dark:border-neutral-700"
           >
             {"<"}
           </button>
           <span className="text-sm font-semibold">
-            {MESES[mes - 1]} de {ano}
+            {visao === "anual" ? ano : `${MESES[mes - 1]} de ${ano}`}
           </span>
           <button
-            onClick={() => mudarMes(1)}
+            onClick={() => (visao === "anual" ? setAno((a) => a + 1) : mudarMes(1))}
             className="rounded-full border border-neutral-300 px-3 py-1.5 text-sm dark:border-neutral-700"
           >
             {">"}
@@ -91,10 +135,10 @@ export default function BalancoPage() {
         </div>
 
         <a
-          href={`/api/exportar/transacoes?from=${ano}-${String(mes).padStart(2, "0")}-01&to=${ano}-${String(mes).padStart(2, "0")}-31`}
+          href={`/api/exportar/transacoes?from=${from}&to=${to}`}
           className="block w-full rounded-2xl border border-neutral-300 py-2.5 text-center text-sm font-medium text-neutral-600 dark:border-neutral-700 dark:text-neutral-300"
         >
-          {"\u{1F4E5}"} Exportar CSV do mes
+          {"\u{1F4E5}"} Exportar CSV {visao === "anual" ? "do ano" : "do mes"}
         </a>
 
         {carregando && (
@@ -174,6 +218,38 @@ export default function BalancoPage() {
                   {formatarMoeda(balanco.naoClassificado)} em despesas sem classificacao (fixo/variavel).
                   Edite esses lancamentos no Fluxo de Caixa para um balanco mais preciso.
                 </p>
+              </div>
+            )}
+
+            {visao === "anual" && comparativo.length > 0 && (
+              <div className="card">
+                <h3 className="mb-3 text-sm font-semibold">Comparativo entre anos</h3>
+                <div className="space-y-2">
+                  {comparativo.map((linha) => {
+                    const positivo = linha.lucro >= 0;
+                    return (
+                      <div
+                        key={linha.ano}
+                        className={`flex items-center justify-between rounded-xl p-2 text-sm ${
+                          linha.ano === ano ? "bg-brand-500/10" : ""
+                        }`}
+                      >
+                        <span className="font-medium">{linha.ano}</span>
+                        <span className="text-neutral-500">{formatarMoeda(linha.receitas)}</span>
+                        <span className="text-neutral-500">{formatarMoeda(linha.despesas)}</span>
+                        <span className={`font-semibold ${positivo ? "text-brand-600 dark:text-brand-400" : "text-danger"}`}>
+                          {formatarMoeda(linha.lucro)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="mt-2 flex justify-between px-2 text-[10px] text-neutral-400">
+                  <span>Ano</span>
+                  <span>Receitas</span>
+                  <span>Custos</span>
+                  <span>Lucro</span>
+                </div>
               </div>
             )}
           </>
