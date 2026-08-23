@@ -41,13 +41,30 @@ export default function ConfiguracoesPage() {
 
         {usuario?.tipo === "chefe" && (
           <a
+            href="/api/backup/planilha"
+            className="card flex items-center justify-between"
+          >
+            <div>
+              <span className="text-sm font-medium">Baixar planilha com todos os dados</span>
+              <p className="text-xs text-neutral-400">
+                Abre no Excel, Google Sheets ou Numbers. Uma aba por tabela (transacoes, setores,
+                funcionarios, animais, etc.) — serve pra conferir e como backup.
+              </p>
+            </div>
+            <span className="text-neutral-400 flex-shrink-0">{"⬇"}</span>
+          </a>
+        )}
+
+        {usuario?.tipo === "chefe" && (
+          <a
             href="/api/backup"
             className="card flex items-center justify-between"
           >
             <div>
-              <span className="text-sm font-medium">Baixar backup dos dados</span>
+              <span className="text-sm font-medium">Backup tecnico (.db)</span>
               <p className="text-xs text-neutral-400">
-                Copia completa do banco de dados (transacoes, setores, funcionarios, tudo).
+                Copia bruta do banco de dados. Nao abre em nada do celular/computador — e so pra
+                restaurar tudo caso algo dê muito errado.
               </p>
             </div>
             <span className="text-neutral-400 flex-shrink-0">{"⬇"}</span>
