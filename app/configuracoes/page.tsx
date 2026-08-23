@@ -39,6 +39,21 @@ export default function ConfiguracoesPage() {
           </a>
         )}
 
+        {usuario?.tipo === "chefe" && (
+          <a
+            href="/api/backup"
+            className="card flex items-center justify-between"
+          >
+            <div>
+              <span className="text-sm font-medium">Baixar backup dos dados</span>
+              <p className="text-xs text-neutral-400">
+                Copia completa do banco de dados (transacoes, setores, funcionarios, tudo).
+              </p>
+            </div>
+            <span className="text-neutral-400 flex-shrink-0">{"⬇"}</span>
+          </a>
+        )}
+
         <a
           href="/mentor"
           className="card flex items-center justify-between"
