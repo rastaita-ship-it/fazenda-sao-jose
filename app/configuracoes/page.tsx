@@ -71,14 +71,6 @@ export default function ConfiguracoesPage() {
           </a>
         )}
 
-        <a
-          href="/mentor"
-          className="card flex items-center justify-between"
-        >
-          <span className="text-sm font-medium">Mentor Rural</span>
-          <span className="text-neutral-400">{">"}</span>
-        </a>
-
         <button
           onClick={sair}
           className="btn-danger w-full"
