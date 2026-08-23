@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Header from "@/components/layout/Header";
+import { jsPDF } from "jspdf";
 
 interface Balanco {
   periodo: { from: string; to: string; dias: number };
@@ -89,6 +90,78 @@ export default function BalancoPage() {
     setAno(novoAno);
   }
 
+  function gerarPdf() {
+    if (!balanco) return;
+    const doc = new jsPDF();
+    const margem = 15;
+    let y = 20;
+
+    doc.setFontSize(16);
+    doc.text("Fazenda Sao Jose", margem, y);
+    y += 8;
+    doc.setFontSize(12);
+    doc.text(
+      `Balanco ${visao === "anual" ? "Anual" : "Mensal"} - ${
+        visao === "anual" ? ano : `${MESES[mes - 1]} de ${ano}`
+      }`,
+      margem,
+      y
+    );
+    y += 10;
+
+    doc.setFontSize(11);
+    const linha = (rotulo: string, valor: string) => {
+      doc.text(rotulo, margem, y);
+      doc.text(valor, 195 - margem, y, { align: "right" });
+      y += 7;
+    };
+
+    doc.setFont("helvetica", "bold");
+    linha("Resultado do periodo", formatarMoeda(balanco.lucro));
+    doc.setFont("helvetica", "normal");
+    y += 3;
+
+    linha("Receitas", formatarMoeda(balanco.receitas));
+    linha("Custo total", formatarMoeda(balanco.custoTotal));
+    y += 3;
+    linha("  Custo fixo total", formatarMoeda(balanco.custoFixoTotal));
+    linha("    Despesas fixas lancadas", formatarMoeda(balanco.custoFixoLancado));
+    linha("    Mao de obra fixa (automatico)", formatarMoeda(balanco.maoDeObraFixa));
+    linha("    Depreciacao do patrimonio (automatico)", formatarMoeda(balanco.depreciacaoPeriodo));
+    linha("  Custo variavel total", formatarMoeda(balanco.custoVariavelTotal));
+    if (balanco.naoClassificado > 0) {
+      linha("  Sem classificacao (fixo/variavel)", formatarMoeda(balanco.naoClassificado));
+    }
+
+    if (visao === "anual" && comparativo.length > 0) {
+      y += 8;
+      doc.setFont("helvetica", "bold");
+      doc.text("Comparativo entre anos", margem, y);
+      y += 7;
+      doc.setFontSize(10);
+      doc.text("Ano", margem, y);
+      doc.text("Receitas", 90, y, { align: "right" });
+      doc.text("Custos", 140, y, { align: "right" });
+      doc.text("Lucro", 195 - margem, y, { align: "right" });
+      y += 6;
+      doc.setFont("helvetica", "normal");
+      for (const linhaComp of comparativo) {
+        doc.text(String(linhaComp.ano), margem, y);
+        doc.text(formatarMoeda(linhaComp.receitas), 90, y, { align: "right" });
+        doc.text(formatarMoeda(linhaComp.despesas), 140, y, { align: "right" });
+        doc.text(formatarMoeda(linhaComp.lucro), 195 - margem, y, { align: "right" });
+        y += 6;
+      }
+    }
+
+    doc.setFontSize(8);
+    doc.setTextColor(150);
+    doc.text(`Gerado em ${new Date().toLocaleDateString("pt-BR")}`, margem, 285);
+
+    const nomeArquivo = `balanco-${visao === "anual" ? ano : `${ano}-${String(mes).padStart(2, "0")}`}.pdf`;
+    doc.save(nomeArquivo);
+  }
+
   const lucroPositivo = (balanco?.lucro ?? 0) >= 0;
   const pctFixo = balanco && balanco.custoTotal > 0 ? (balanco.custoFixoTotal / balanco.custoTotal) * 100 : 0;
   const pctVariavel = balanco && balanco.custoTotal > 0 ? (balanco.custoVariavelTotal / balanco.custoTotal) * 100 : 0;
@@ -134,12 +207,21 @@ export default function BalancoPage() {
           </button>
         </div>
 
-        <a
-          href={`/api/exportar/transacoes?from=${from}&to=${to}`}
-          className="block w-full rounded-2xl border border-neutral-300 py-2.5 text-center text-sm font-medium text-neutral-600 dark:border-neutral-700 dark:text-neutral-300"
-        >
-          {"\u{1F4E5}"} Exportar CSV {visao === "anual" ? "do ano" : "do mes"}
-        </a>
+        <div className="grid grid-cols-2 gap-2">
+          <a
+            href={`/api/exportar/transacoes?from=${from}&to=${to}`}
+            className="rounded-2xl border border-neutral-300 py-2.5 text-center text-sm font-medium text-neutral-600 dark:border-neutral-700 dark:text-neutral-300"
+          >
+            {"\u{1F4E5}"} CSV
+          </a>
+          <button
+            onClick={gerarPdf}
+            disabled={!balanco}
+            className="rounded-2xl border border-neutral-300 py-2.5 text-center text-sm font-medium text-neutral-600 disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-300"
+          >
+            {"\u{1F4C4}"} PDF
+          </button>
+        </div>
 
         {carregando && (
           <div className="card text-center text-sm text-neutral-400">Calculando...</div>
