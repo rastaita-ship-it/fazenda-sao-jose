@@ -30,6 +30,10 @@ export default function CategorizarPage() {
   const [busca, setBusca] = useState("");
   const [escolha, setEscolha] = useState<Record<string, number | "">>({});
   const [aplicando, setAplicando] = useState<string | null>(null);
+  const [modoRateio, setModoRateio] = useState<Record<string, boolean>>({});
+  const [rateioLinhas, setRateioLinhas] = useState<
+    Record<string, { setor_id: number | ""; percentual: string }[]>
+  >({});
 
   useEffect(() => {
     // carregando ja nasce true; buscar direto aqui evita repetir os sets
@@ -74,6 +78,84 @@ export default function CategorizarPage() {
       }
       const nomeSetor = setores.find((s) => s.id === setorId)?.nome ?? "setor escolhido";
       toast.sucesso(`${grupo.qtd} lancamento(s) movido(s) para ${nomeSetor}.`);
+      setGrupos((atual) => atual.filter((g) => !(g.descricao === grupo.descricao && g.tipo === grupo.tipo)));
+    } finally {
+      setAplicando(null);
+    }
+  }
+
+  function alternarRateio(chave: string) {
+    setModoRateio((atual) => ({ ...atual, [chave]: !atual[chave] }));
+    setRateioLinhas((atual) =>
+      atual[chave]
+        ? atual
+        : { ...atual, [chave]: [{ setor_id: "", percentual: "" }, { setor_id: "", percentual: "" }] }
+    );
+  }
+
+  function atualizarLinhaRateio(
+    chave: string,
+    idx: number,
+    campo: "setor_id" | "percentual",
+    valor: string
+  ) {
+    setRateioLinhas((atual) => {
+      const linhas = [...(atual[chave] ?? [])];
+      linhas[idx] = {
+        ...linhas[idx],
+        [campo]: campo === "setor_id" ? (valor ? Number(valor) : "") : valor,
+      };
+      return { ...atual, [chave]: linhas };
+    });
+  }
+
+  function adicionarLinhaRateio(chave: string) {
+    setRateioLinhas((atual) => ({
+      ...atual,
+      [chave]: [...(atual[chave] ?? []), { setor_id: "", percentual: "" }],
+    }));
+  }
+
+  function removerLinhaRateio(chave: string, idx: number) {
+    setRateioLinhas((atual) => ({
+      ...atual,
+      [chave]: (atual[chave] ?? []).filter((_, i) => i !== idx),
+    }));
+  }
+
+  function somaPercentual(chave: string) {
+    return (rateioLinhas[chave] ?? []).reduce((soma, l) => soma + (Number(l.percentual) || 0), 0);
+  }
+
+  async function aplicarRateio(grupo: Grupo) {
+    const chave = grupo.descricao + grupo.tipo;
+    const linhas = rateioLinhas[chave] ?? [];
+    const soma = somaPercentual(chave);
+    if (linhas.some((l) => !l.setor_id || !l.percentual)) {
+      toast.erro("Preencha setor e percentual em todas as linhas.");
+      return;
+    }
+    if (Math.abs(soma - 100) > 0.01) {
+      toast.erro(`Os percentuais somam ${soma}%, precisam somar 100%.`);
+      return;
+    }
+    setAplicando(chave);
+    try {
+      const res = await fetch("/api/transactions/categorizar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          descricao: grupo.descricao,
+          tipo: grupo.tipo,
+          rateio: linhas.map((l) => ({ setor_id: l.setor_id, percentual: Number(l.percentual) })),
+        }),
+      });
+      if (!res.ok) {
+        const dados = await res.json().catch(() => ({}));
+        toast.erro(dados.error ?? "Nao foi possivel aplicar o rateio.");
+        return;
+      }
+      toast.sucesso(`${grupo.qtd} lancamento(s) divididos por percentual.`);
       setGrupos((atual) => atual.filter((g) => !(g.descricao === grupo.descricao && g.tipo === grupo.tipo)));
     } finally {
       setAplicando(null);
@@ -142,32 +224,102 @@ export default function CategorizarPage() {
                 {grupo.qtd} lançamento{grupo.qtd > 1 ? "s" : ""} · {formatarData(grupo.primeira_data)}
                 {grupo.primeira_data !== grupo.ultima_data && ` a ${formatarData(grupo.ultima_data)}`}
               </p>
-              <div className="flex gap-2">
-                <select
-                  value={escolha[chave] ?? ""}
-                  onChange={(e) =>
-                    setEscolha((atual) => ({
-                      ...atual,
-                      [chave]: e.target.value ? Number(e.target.value) : "",
-                    }))
-                  }
-                  className="input-base flex-1"
-                >
-                  <option value="">Escolher setor...</option>
-                  {setores.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.nome}
-                    </option>
+              {!modoRateio[chave] && (
+                <div className="flex gap-2">
+                  <select
+                    value={escolha[chave] ?? ""}
+                    onChange={(e) =>
+                      setEscolha((atual) => ({
+                        ...atual,
+                        [chave]: e.target.value ? Number(e.target.value) : "",
+                      }))
+                    }
+                    className="input-base flex-1"
+                  >
+                    <option value="">Escolher setor...</option>
+                    {setores.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.nome}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => aplicar(grupo)}
+                    disabled={aplicando === chave}
+                    className="btn-primary flex-shrink-0 px-4"
+                  >
+                    {aplicando === chave ? "..." : "Aplicar"}
+                  </button>
+                </div>
+              )}
+
+              {modoRateio[chave] && (
+                <div className="space-y-2 rounded-lg border border-neutral-200 p-2 dark:border-neutral-700">
+                  {(rateioLinhas[chave] ?? []).map((linha, idx) => (
+                    <div key={idx} className="flex gap-2">
+                      <select
+                        value={linha.setor_id}
+                        onChange={(e) => atualizarLinhaRateio(chave, idx, "setor_id", e.target.value)}
+                        className="input-base flex-1"
+                      >
+                        <option value="">Setor...</option>
+                        {setores.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.nome}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="number"
+                        placeholder="%"
+                        value={linha.percentual}
+                        onChange={(e) => atualizarLinhaRateio(chave, idx, "percentual", e.target.value)}
+                        className="input-base w-20"
+                      />
+                      {(rateioLinhas[chave]?.length ?? 0) > 2 && (
+                        <button
+                          onClick={() => removerLinhaRateio(chave, idx)}
+                          className="flex-shrink-0 px-2 text-neutral-400"
+                          aria-label="Remover linha"
+                        >
+                          {"✕"}
+                        </button>
+                      )}
+                    </div>
                   ))}
-                </select>
-                <button
-                  onClick={() => aplicar(grupo)}
-                  disabled={aplicando === chave}
-                  className="btn-primary flex-shrink-0 px-4"
-                >
-                  {aplicando === chave ? "..." : "Aplicar"}
-                </button>
-              </div>
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={() => adicionarLinhaRateio(chave)}
+                      className="text-xs text-brand-600 dark:text-brand-400"
+                    >
+                      + adicionar setor
+                    </button>
+                    <span
+                      className={`text-xs ${
+                        Math.abs(somaPercentual(chave) - 100) > 0.01
+                          ? "text-danger"
+                          : "text-neutral-400"
+                      }`}
+                    >
+                      soma: {somaPercentual(chave)}%
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => aplicarRateio(grupo)}
+                    disabled={aplicando === chave}
+                    className="btn-primary w-full"
+                  >
+                    {aplicando === chave ? "..." : "Aplicar rateio"}
+                  </button>
+                </div>
+              )}
+
+              <button
+                onClick={() => alternarRateio(chave)}
+                className="mt-2 text-xs text-neutral-400 underline"
+              >
+                {modoRateio[chave] ? "Cancelar divisao por %" : "Dividir por % entre setores"}
+              </button>
             </div>
           );
         })}
