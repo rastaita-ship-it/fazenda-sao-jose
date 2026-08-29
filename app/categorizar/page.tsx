@@ -34,6 +34,7 @@ export default function CategorizarPage() {
   const [rateioLinhas, setRateioLinhas] = useState<
     Record<string, { setor_id: number | ""; percentual: string }[]>
   >({});
+  const [aplicandoConhecidos, setAplicandoConhecidos] = useState(false);
 
   useEffect(() => {
     // carregando ja nasce true; buscar direto aqui evita repetir os sets
@@ -81,6 +82,24 @@ export default function CategorizarPage() {
       setGrupos((atual) => atual.filter((g) => !(g.descricao === grupo.descricao && g.tipo === grupo.tipo)));
     } finally {
       setAplicando(null);
+    }
+  }
+
+  async function aplicarConhecidos() {
+    setAplicandoConhecidos(true);
+    try {
+      const res = await fetch("/api/transactions/categorizar/aplicar-conhecidos", { method: "POST" });
+      const dados = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.erro(dados.error ?? "Nao foi possivel aplicar.");
+        return;
+      }
+      toast.sucesso(
+        `${dados.aplicadoCafe} lancamento(s) movidos para Café, ${dados.aplicadoOficina} para Oficina e Manutencao.`
+      );
+      carregar();
+    } finally {
+      setAplicandoConhecidos(false);
     }
   }
 
@@ -186,6 +205,23 @@ export default function CategorizarPage() {
         {!carregando && grupos.length === 0 && (
           <div className="card text-center text-sm text-neutral-400">
             Tudo categorizado — nenhum lançamento pendente em Geral/Administrativo.
+          </div>
+        )}
+
+        {!carregando && grupos.length > 0 && (
+          <div className="card space-y-2">
+            <p className="text-sm font-medium">Categorização de fornecedores conhecidos</p>
+            <p className="text-xs text-neutral-400">
+              Aplica de uma vez os fornecedores já identificados (insumos agrícolas → Café,
+              peças/oficina → Oficina e Manutenção). Pode rodar mais de uma vez sem problema.
+            </p>
+            <button
+              onClick={aplicarConhecidos}
+              disabled={aplicandoConhecidos}
+              className="btn-primary w-full"
+            >
+              {aplicandoConhecidos ? "Aplicando..." : "Aplicar categorização conhecida"}
+            </button>
           </div>
         )}
 
