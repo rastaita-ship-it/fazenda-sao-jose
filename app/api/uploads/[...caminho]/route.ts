@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { UPLOADS_DIR } from "@/lib/uploads";
+import { estaLogado } from "@/lib/auth-helpers";
 import fs from "fs";
 import path from "path";
 
@@ -16,6 +17,10 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ caminho: string[] }> }
 ) {
+  if (!estaLogado(req)) {
+    return NextResponse.json({ error: "Precisa estar logado." }, { status: 401 });
+  }
+
   const { caminho: partes } = await params;
   if (!partes || partes.some((p) => p.includes(".."))) {
     return NextResponse.json({ error: "caminho invalido" }, { status: 400 });

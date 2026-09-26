@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import "@/lib/db-ponto";
 import "@/lib/db-auth";
 import "@/lib/db-talhoes";
+import { criarValorSessao } from "@/lib/session";
 
 let adminId: number;
 let setorId: number;
@@ -37,7 +38,7 @@ beforeAll(() => {
 function reqComSessao(corpo: unknown) {
   return new NextRequest("http://localhost/api/estoque-insumos/movimentacao", {
     method: "POST",
-    headers: { "content-type": "application/json", cookie: `funcionario_id=${adminId}` },
+    headers: { "content-type": "application/json", cookie: `funcionario_id=${criarValorSessao(adminId)}` },
     body: JSON.stringify(corpo),
   });
 }

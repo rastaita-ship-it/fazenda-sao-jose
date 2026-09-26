@@ -7,6 +7,7 @@ import "@/lib/db-ponto";
 import "@/lib/db-ponto-chave";
 import "@/lib/db-auth";
 import { FAZENDA_COORDENADAS } from "@/lib/geo";
+import { criarValorSessao } from "@/lib/session";
 
 let funcionarioId: number;
 
@@ -30,7 +31,7 @@ function reqSemSessao(url: string, init?: InitSimples) {
 function reqComSessao(url: string, init: InitSimples = {}) {
   return new NextRequest(`http://localhost${url}`, {
     ...init,
-    headers: { ...init.headers, cookie: `funcionario_id=${funcionarioId}` },
+    headers: { ...init.headers, cookie: `funcionario_id=${criarValorSessao(funcionarioId)}` },
   });
 }
 

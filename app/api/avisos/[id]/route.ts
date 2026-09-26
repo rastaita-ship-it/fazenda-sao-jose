@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-mural";
-import { estaLogado, ehAdminLogado } from "@/lib/auth-helpers";
+import { estaLogado, ehAdminLogado, idFuncionarioSessao } from "@/lib/auth-helpers";
 
 export async function DELETE(
   req: NextRequest,
@@ -20,7 +20,7 @@ export async function DELETE(
     | undefined;
   if (!aviso) return NextResponse.json({ error: "Aviso nao encontrado." }, { status: 404 });
 
-  const funcionarioId = Number(req.cookies.get("funcionario_id")?.value);
+  const funcionarioId = idFuncionarioSessao(req);
   const ehAutor = aviso.autor_id != null && aviso.autor_id === funcionarioId;
   if (!ehAutor && !ehAdminLogado(req)) {
     return NextResponse.json({ error: "Sem permissao para excluir este aviso." }, { status: 403 });

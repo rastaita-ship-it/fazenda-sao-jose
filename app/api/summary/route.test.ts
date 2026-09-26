@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import "@/lib/db-ponto";
 import "@/lib/db-auth";
 import { SETOR_INVESTIMENTOS_NOME } from "@/lib/financeiro";
+import { criarValorSessao } from "@/lib/session";
 
 let userId: number;
 let setorCafeId: number;
@@ -44,7 +45,7 @@ beforeAll(() => {
 
 function reqComSessao() {
   return new NextRequest("http://localhost/api/summary?from=2026-03-01&to=2026-03-31", {
-    headers: { cookie: `funcionario_id=${userId}` },
+    headers: { cookie: `funcionario_id=${criarValorSessao(userId)}` },
   });
 }
 

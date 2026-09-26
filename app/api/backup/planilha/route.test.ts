@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import "@/lib/db-ponto";
 import "@/lib/db-auth";
 import ExcelJS from "exceljs";
+import { criarValorSessao } from "@/lib/session";
 
 let adminId: number;
 let colaboradorId: number;
@@ -36,7 +37,7 @@ describe("GET /api/backup/planilha", () => {
   it("recusa colaborador nao-admin", async () => {
     const res = await GET(
       new NextRequest("http://localhost/api/backup/planilha", {
-        headers: { cookie: `funcionario_id=${colaboradorId}` },
+        headers: { cookie: `funcionario_id=${criarValorSessao(colaboradorId)}` },
       })
     );
     expect(res.status).toBe(403);
@@ -45,7 +46,7 @@ describe("GET /api/backup/planilha", () => {
   it("gera uma planilha xlsx valida com uma aba por tabela e os dados reais", async () => {
     const res = await GET(
       new NextRequest("http://localhost/api/backup/planilha", {
-        headers: { cookie: `funcionario_id=${adminId}` },
+        headers: { cookie: `funcionario_id=${criarValorSessao(adminId)}` },
       })
     );
     expect(res.status).toBe(200);

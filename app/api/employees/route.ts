@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import "@/lib/db-ponto";
 import "@/lib/db-auth";
 import "@/lib/db-salario";
+import { ehAdminLogado } from "@/lib/auth-helpers";
 
 export interface Funcionario {
   id: number;
@@ -12,15 +13,6 @@ export interface Funcionario {
   tipo_contrato: string;
   ativo: number;
   criado_em: string;
-}
-
-function ehAdminLogado(req: NextRequest) {
-  const funcionarioId = req.cookies.get("funcionario_id")?.value;
-  if (!funcionarioId) return false;
-  const usuario = db
-    .prepare("SELECT tipo FROM funcionarios WHERE id = ? AND ativo = 1")
-    .get(funcionarioId) as { tipo: string } | undefined;
-  return usuario?.tipo === "chefe";
 }
 
 function existeAdmin() {

@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import "@/lib/db-ponto";
 import "@/lib/db-auth";
 import "@/lib/db-animais";
+import { criarValorSessao } from "@/lib/session";
 
 let adminId: number;
 let setorId: number;
@@ -52,7 +53,7 @@ beforeAll(() => {
 
 function reqComSessao() {
   return new NextRequest("http://localhost/api/talhoes/resumo", {
-    headers: { cookie: `funcionario_id=${adminId}` },
+    headers: { cookie: `funcionario_id=${criarValorSessao(adminId)}` },
   });
 }
 

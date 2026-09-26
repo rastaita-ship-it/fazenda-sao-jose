@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ehAdminLogado } from "@/lib/auth-helpers";
+import { ehAdminLogado, idFuncionarioSessao } from "@/lib/auth-helpers";
 import { arquivoDentroDoLimite } from "@/lib/uploads";
 import { estaBloqueado, registrarTentativaFalha } from "@/lib/rate-limit";
 
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Apenas administradores." }, { status: 403 });
   }
 
-  const funcionarioId = req.cookies.get("funcionario_id")?.value ?? "desconhecido";
+  const funcionarioId = idFuncionarioSessao(req) ?? "desconhecido";
   const chaveLimite = `ocr-recibo:${funcionarioId}`;
   if (estaBloqueado(chaveLimite)) {
     return NextResponse.json(

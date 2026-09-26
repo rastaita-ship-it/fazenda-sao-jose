@@ -5,6 +5,7 @@ import { POST } from "./route";
 import { db } from "@/lib/db";
 import "@/lib/db-ponto";
 import "@/lib/db-auth";
+import { criarValorSessao } from "@/lib/session";
 
 let adminId: number;
 let colaboradorId: number;
@@ -74,12 +75,12 @@ describe("POST /api/transactions/categorizar/aplicar-conhecidos", () => {
   });
 
   it("recusa colaborador nao-admin", async () => {
-    const res = await POST(reqPost(`funcionario_id=${colaboradorId}`));
+    const res = await POST(reqPost(`funcionario_id=${criarValorSessao(colaboradorId)}`));
     expect(res.status).toBe(403);
   });
 
   it("move os fornecedores conhecidos para Café e Oficina e Manutencao", async () => {
-    const res = await POST(reqPost(`funcionario_id=${adminId}`));
+    const res = await POST(reqPost(`funcionario_id=${criarValorSessao(adminId)}`));
     expect(res.status).toBe(200);
     const dados = await res.json();
     expect(dados.aplicadoCafe).toBe(1);
@@ -102,7 +103,7 @@ describe("POST /api/transactions/categorizar/aplicar-conhecidos", () => {
   });
 
   it("e idempotente: rodar de novo nao move nada a mais", async () => {
-    const res = await POST(reqPost(`funcionario_id=${adminId}`));
+    const res = await POST(reqPost(`funcionario_id=${criarValorSessao(adminId)}`));
     expect(res.status).toBe(200);
     const dados = await res.json();
     expect(dados.aplicadoCafe).toBe(0);

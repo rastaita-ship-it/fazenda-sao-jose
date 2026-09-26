@@ -1,12 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
+import { estaLogado, idFuncionarioSessao } from "@/lib/auth-helpers";
+import { estaBloqueado, registrarTentativaFalha, obterIpRequisicao } from "@/lib/rate-limit";
+
+// Mesmo raciocinio do /api/mentor: cada pergunta custa uma chamada paga na
+// API do Gemini, entao exige login e limita quantidade por pessoa.
+const MAX_PERGUNTAS = 20;
+const JANELA_PERGUNTAS_MS = 10 * 60 * 1000;
 
 export async function POST(req: NextRequest) {
+  if (!estaLogado(req)) {
+    return NextResponse.json({ error: "Precisa estar logado." }, { status: 401 });
+  }
+
+  const chaveLimite = `conhecimento-ia:${idFuncionarioSessao(req) ?? obterIpRequisicao(req)}`;
+  if (estaBloqueado(chaveLimite)) {
+    return NextResponse.json(
+      { error: "Muitas perguntas em pouco tempo. Aguarde alguns minutos e tente de novo." },
+      { status: 429 }
+    );
+  }
+
   const body = await req.json();
   const { pergunta } = body;
 
   if (!pergunta || !pergunta.trim()) {
     return NextResponse.json({ error: "pergunta e obrigatoria" }, { status: 400 });
   }
+
+  registrarTentativaFalha(chaveLimite, MAX_PERGUNTAS, JANELA_PERGUNTAS_MS);
 
   const chave = process.env.GEMINI_API_KEY;
   if (!chave) {

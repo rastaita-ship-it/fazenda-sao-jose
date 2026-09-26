@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-mural";
+import { estaLogado } from "@/lib/auth-helpers";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  if (!estaLogado(req)) {
+    return NextResponse.json({ error: "Precisa estar logado." }, { status: 401 });
+  }
   const itens = db.prepare("SELECT * FROM avisos ORDER BY id DESC LIMIT 50").all();
   return NextResponse.json(itens);
 }
 
 export async function POST(req: NextRequest) {
+  if (!estaLogado(req)) {
+    return NextResponse.json({ error: "Precisa estar logado." }, { status: 401 });
+  }
   const body = await req.json();
   const { autor_id, autor_nome, texto } = body;
   if (!autor_nome || !texto || !texto.trim()) {

@@ -3,8 +3,12 @@ import { db } from "@/lib/db";
 import "@/lib/db-ponto";
 import "@/lib/db-manejo";
 import "@/lib/db-manejo-grupo";
+import { estaLogado } from "@/lib/auth-helpers";
 
 export async function GET(req: NextRequest) {
+  if (!estaLogado(req)) {
+    return NextResponse.json({ error: "Precisa estar logado." }, { status: 401 });
+  }
   const { searchParams } = new URL(req.url);
   const ano = searchParams.get("ano");
   const mes = searchParams.get("mes");

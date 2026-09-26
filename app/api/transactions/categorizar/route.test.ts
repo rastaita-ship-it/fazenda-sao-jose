@@ -7,6 +7,7 @@ import "@/lib/db-ponto";
 import "@/lib/db-auth";
 import "@/lib/db-custos";
 import "@/lib/db-talhoes";
+import { criarValorSessao } from "@/lib/session";
 
 let adminId: number;
 let setorGeralId: number;
@@ -50,7 +51,7 @@ beforeAll(() => {
 });
 
 function reqComSessao(url: string) {
-  return new NextRequest(url, { headers: { cookie: `funcionario_id=${adminId}` } });
+  return new NextRequest(url, { headers: { cookie: `funcionario_id=${criarValorSessao(adminId)}` } });
 }
 
 describe("GET /api/transactions/categorizar", () => {
@@ -81,7 +82,7 @@ describe("POST /api/transactions/categorizar", () => {
     const res = await POST(
       new NextRequest("http://localhost/api/transactions/categorizar", {
         method: "POST",
-        headers: { cookie: `funcionario_id=${adminId}`, "Content-Type": "application/json" },
+        headers: { cookie: `funcionario_id=${criarValorSessao(adminId)}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           descricao: "Pix enviado: Fornecedor Teste X",
           tipo: "despesa",
@@ -108,7 +109,7 @@ describe("POST /api/transactions/categorizar", () => {
     const res = await POST(
       new NextRequest("http://localhost/api/transactions/categorizar", {
         method: "POST",
-        headers: { cookie: `funcionario_id=${adminId}`, "Content-Type": "application/json" },
+        headers: { cookie: `funcionario_id=${criarValorSessao(adminId)}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           descricao: "Pix recebido: Cliente Teste Y",
           tipo: "receita",
@@ -123,7 +124,7 @@ describe("POST /api/transactions/categorizar", () => {
     const res = await POST(
       new NextRequest("http://localhost/api/transactions/categorizar", {
         method: "POST",
-        headers: { cookie: `funcionario_id=${adminId}`, "Content-Type": "application/json" },
+        headers: { cookie: `funcionario_id=${criarValorSessao(adminId)}`, "Content-Type": "application/json" },
         body: JSON.stringify({ descricao: "Pix recebido: Cliente Teste Y" }),
       })
     );
@@ -134,7 +135,7 @@ describe("POST /api/transactions/categorizar", () => {
     const res = await POST(
       new NextRequest("http://localhost/api/transactions/categorizar", {
         method: "POST",
-        headers: { cookie: `funcionario_id=${adminId}`, "Content-Type": "application/json" },
+        headers: { cookie: `funcionario_id=${criarValorSessao(adminId)}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           descricao: "Pix enviado: Diarista Teste Z",
           tipo: "despesa",
@@ -168,7 +169,7 @@ describe("POST /api/transactions/categorizar", () => {
     const res = await POST(
       new NextRequest("http://localhost/api/transactions/categorizar", {
         method: "POST",
-        headers: { cookie: `funcionario_id=${adminId}`, "Content-Type": "application/json" },
+        headers: { cookie: `funcionario_id=${criarValorSessao(adminId)}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           descricao: "Pix recebido: Cliente Teste Y",
           tipo: "receita",
@@ -186,7 +187,7 @@ describe("POST /api/transactions/categorizar", () => {
     const res = await POST(
       new NextRequest("http://localhost/api/transactions/categorizar", {
         method: "POST",
-        headers: { cookie: `funcionario_id=${adminId}`, "Content-Type": "application/json" },
+        headers: { cookie: `funcionario_id=${criarValorSessao(adminId)}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           descricao: "Pix recebido: Cliente Teste Y",
           tipo: "receita",

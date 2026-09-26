@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import "@/lib/db-ponto";
+import { idFuncionarioSessao } from "@/lib/auth-helpers";
 
 export async function GET(req: NextRequest) {
-  const funcionarioId = req.cookies.get("funcionario_id")?.value;
+  const funcionarioId = idFuncionarioSessao(req);
 
   if (!funcionarioId) {
     return NextResponse.json(null);
