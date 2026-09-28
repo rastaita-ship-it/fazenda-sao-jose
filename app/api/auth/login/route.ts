@@ -4,6 +4,7 @@ import "@/lib/db-ponto";
 import "@/lib/db-auth";
 import { estaBloqueado, registrarTentativaFalha, limparTentativas, obterIpRequisicao } from "@/lib/rate-limit";
 import { lerCorpoJson } from "@/lib/api";
+import { criarValorSessao } from "@/lib/session";
 
 interface FuncionarioComPin {
   id: number;
@@ -66,7 +67,7 @@ export async function POST(req: NextRequest) {
     tipo: funcionario.tipo,
   });
 
-  resposta.cookies.set("funcionario_id", String(funcionario.id), {
+  resposta.cookies.set("funcionario_id", criarValorSessao(funcionario.id), {
     httpOnly: true,
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 30,

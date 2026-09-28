@@ -5,6 +5,7 @@ import { PATCH, avancarProximaParcela } from "./route";
 import { db } from "@/lib/db";
 import "@/lib/db-ponto";
 import "@/lib/db-auth";
+import { criarValorSessao } from "@/lib/session";
 
 let adminId: number;
 
@@ -18,7 +19,7 @@ beforeAll(() => {
 function reqComSessao(url: string, corpo: unknown) {
   return new NextRequest(`http://localhost${url}`, {
     method: "PATCH",
-    headers: { "content-type": "application/json", cookie: `funcionario_id=${adminId}` },
+    headers: { "content-type": "application/json", cookie: `funcionario_id=${criarValorSessao(adminId)}` },
     body: JSON.stringify(corpo),
   });
 }

@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import "@/lib/db-ponto";
 import "@/lib/db-auth";
 import { limparTentativas } from "@/lib/rate-limit";
+import { criarValorSessao } from "@/lib/session";
 
 let adminId: number;
 
@@ -21,7 +22,7 @@ function reqComArquivo(arquivo: File | null) {
   if (arquivo) formData.append("arquivo", arquivo);
   return new NextRequest("http://localhost/api/transactions/ocr", {
     method: "POST",
-    headers: { cookie: `funcionario_id=${adminId}` },
+    headers: { cookie: `funcionario_id=${criarValorSessao(adminId)}` },
     body: formData,
   });
 }

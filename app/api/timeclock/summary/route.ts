@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import "@/lib/db-ponto";
 import "@/lib/db-ponto-geo";
 import { JORNADA_PADRAO_HORAS } from "@/lib/jornada";
+import { ehAdminLogado, idFuncionarioSessao } from "@/lib/auth-helpers";
 
 interface RegistroBruto {
   id: number;
@@ -26,6 +27,16 @@ export async function GET(req: NextRequest) {
 
   if (!funcionarioId) {
     return NextResponse.json({ error: "funcionario_id é obrigatório." }, { status: 400 });
+  }
+
+  // So o proprio funcionario ve o resumo do seu ponto, ou o admin ve de qualquer um
+  // — sem isso, bastava trocar o numero na URL pra ver o ponto de outra pessoa.
+  const idSessao = idFuncionarioSessao(req);
+  if (!idSessao) {
+    return NextResponse.json({ error: "Precisa estar logado." }, { status: 401 });
+  }
+  if (String(idSessao) !== funcionarioId && !ehAdminLogado(req)) {
+    return NextResponse.json({ error: "Sem permissao para ver o ponto de outro funcionario." }, { status: 403 });
   }
 
   const now = new Date();

@@ -1,4 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { estaLogado, idFuncionarioSessao } from "@/lib/auth-helpers";
+import { estaBloqueado, registrarTentativaFalha, obterIpRequisicao } from "@/lib/rate-limit";
+import { arquivoDentroDoLimite } from "@/lib/uploads";
+
+// Cada pergunta custa uma chamada paga na API da Claude. Sem login nem
+// limite, qualquer requisicao direta ao servidor (sem passar pela tela)
+// gera custo ilimitado usando a chave da fazenda.
+const MAX_PERGUNTAS = 20;
+const JANELA_PERGUNTAS_MS = 10 * 60 * 1000;
 
 const SYSTEM_PROMPT = `Voce e o Mentor Rural, um assistente especializado em agropecuaria brasileira, criado para a Fazenda Sao Jose.
 
@@ -17,6 +26,18 @@ Regras de resposta:
 - Nunca invente um diagnostico com certeza absoluta quando a foto for pouco clara; nesses casos, recomende buscar um veterinario, agronomo ou tecnico agricola.`;
 
 export async function POST(req: NextRequest) {
+  if (!estaLogado(req)) {
+    return NextResponse.json({ error: "Precisa estar logado." }, { status: 401 });
+  }
+
+  const chaveLimite = `mentor:${idFuncionarioSessao(req) ?? obterIpRequisicao(req)}`;
+  if (estaBloqueado(chaveLimite)) {
+    return NextResponse.json(
+      { error: "Muitas perguntas em pouco tempo. Aguarde alguns minutos e tente de novo." },
+      { status: 429 }
+    );
+  }
+
   const formData = await req.formData();
   const pergunta = formData.get("pergunta") as string | null;
   const foto = formData.get("foto") as File | null;
@@ -24,6 +45,11 @@ export async function POST(req: NextRequest) {
   if (!pergunta || !pergunta.trim()) {
     return NextResponse.json({ error: "pergunta e obrigatoria" }, { status: 400 });
   }
+  if (foto && !arquivoDentroDoLimite(foto)) {
+    return NextResponse.json({ error: "Foto muito grande (limite de 10MB)." }, { status: 400 });
+  }
+
+  registrarTentativaFalha(chaveLimite, MAX_PERGUNTAS, JANELA_PERGUNTAS_MS);
 
   const chave = process.env.ANTHROPIC_API_KEY;
   if (!chave) {

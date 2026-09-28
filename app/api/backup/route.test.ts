@@ -5,6 +5,7 @@ import { GET } from "./route";
 import { db } from "@/lib/db";
 import "@/lib/db-ponto";
 import "@/lib/db-auth";
+import { criarValorSessao } from "@/lib/session";
 
 let adminId: number;
 let colaboradorId: number;
@@ -30,7 +31,7 @@ describe("GET /api/backup", () => {
   it("recusa colaborador nao-admin", async () => {
     const res = await GET(
       new NextRequest("http://localhost/api/backup", {
-        headers: { cookie: `funcionario_id=${colaboradorId}` },
+        headers: { cookie: `funcionario_id=${criarValorSessao(colaboradorId)}` },
       })
     );
     expect(res.status).toBe(403);
@@ -39,7 +40,7 @@ describe("GET /api/backup", () => {
   it("bloqueia em modo de teste (banco em memoria, sem arquivo pra baixar)", async () => {
     const res = await GET(
       new NextRequest("http://localhost/api/backup", {
-        headers: { cookie: `funcionario_id=${adminId}` },
+        headers: { cookie: `funcionario_id=${criarValorSessao(adminId)}` },
       })
     );
     expect(res.status).toBe(400);

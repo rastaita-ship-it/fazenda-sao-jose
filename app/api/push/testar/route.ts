@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ehAdminLogado } from "@/lib/auth-helpers";
+import { ehAdminLogado, idFuncionarioSessao } from "@/lib/auth-helpers";
 import { enviarParaFuncionario } from "@/lib/notificacoes";
 
 export async function POST(req: NextRequest) {
   if (!ehAdminLogado(req)) {
     return NextResponse.json({ error: "Apenas administradores." }, { status: 403 });
   }
-  const funcionarioId = Number(req.cookies.get("funcionario_id")?.value);
+  const funcionarioId = idFuncionarioSessao(req)!;
 
   await enviarParaFuncionario(funcionarioId, {
     titulo: "Notificações ativadas 🎉",
